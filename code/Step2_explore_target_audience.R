@@ -24,4 +24,3 @@ target <- orig_list %>%
 
 # Share ------------------------------------------------------------------------
 
-#write.csv(target, "target_audience_table.csv", row.names = FALSE)
