@@ -20,7 +20,7 @@ target <- orig_list %>%
   summarize(n_strategies = length(unique(obs_id)),
             n_plans = length(unique(plan_id))) %>% 
   mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
-         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100)
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
 
 # Share ------------------------------------------------------------------------
 

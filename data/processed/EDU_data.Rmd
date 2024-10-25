@@ -1,0 +1,75 @@
+---
+title: "EDU DATA"
+output: pdf_document
+date: "2024-10-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+
+# Target Audience
+
+target quantifies how many strategies and plans are aimed at each recipient
+* each plan can have multiple strategies 
+* each plan/strategy can target multiple recipients
+* edu_target_audience is who the plan/strategy targets
+* n_strategies is how many dinstinct action items target a recipient
+* n_plans is how many MPA plans target a specified recipient across all action items
+* percent_of_strategies is the percent of strategies that target a recipient
+* percent_of_plans is the percent of plans that target a recipient
+```{r}
+target <- orig_list %>% 
+  distinct(obs_id, plan_id, edu_target_audience) %>% 
+  separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
+  mutate(across(everything(), str_trim)) %>% 
+  pivot_longer(part_1:part_8, values_to = "edu_target_audience", names_to = NULL, values_drop_na = T) %>% 
+  group_by(edu_target_audience) %>% 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) %>% 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
+```
+
+## plots
+```{r}
+library(ggplot2)
+target_barplot <- ggplot(target, aes(x = edu_target_audience)) +
+  geom_bar(aes(y = n_strategies, fill = "Numbner of Strategies"), stat = "identity", position = "dodge") +
+  geom_bar(aes(y = n_plans, fill = "Number of Plans"), stat = "identity", position = "dodge") +
+  labs(title = "Counts of Stategies and Plans by Educational Target Audience",
+       x = "Educational Target Audience",
+       y = "Count",
+       fill = "type") +
+  theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1))
+```
+
+# EDU WHAT
+* edu_what is social strategies and action steps of each overarching educational strategy
+* plans can have multiple education strategy action steps
+```{r}
+edu_what <- orig_list |> 
+  distinct(obs_id, plan_id, edu_what) |> 
+  group_by(edu_what) |> 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) |> 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+                percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) |> 
+  rename(strategy_type = edu_what)
+```
+
+## plots
+```{r}
+ggplot(edu_what, aes(x = strategy_type)) +
+  geom_bar(aes(y = n_strategies, fill = "Number of Strategies"), stat = "identity", position = "dodge") +
+  geom_bar(aes(y = n_plans, fill = "Number of Plans"), stat = "identity", position = "dodge") +
+  labs(title = "Counts of Strategies and Plans by Educational Strategy",
+       x = "Educational Strategy",
+       y = "Count",
+       fill = "type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5), 
+        plot.margin = margin(10, 10, 20, 30))
+```
+
