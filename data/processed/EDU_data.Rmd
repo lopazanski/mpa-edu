@@ -8,6 +8,7 @@ date: "2024-10-25"
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyverse)
+library(forcats)
 ```
 
 # Target Audience
@@ -21,30 +22,49 @@ target quantifies how many strategies and plans are aimed at each recipient
 * percent_of_strategies is the percent of strategies that target a recipient
 * percent_of_plans is the percent of plans that target a recipient
 ```{r}
+ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
 target <- orig_list %>% 
   distinct(obs_id, plan_id, edu_target_audience) %>% 
   separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
   mutate(across(everything(), str_trim)) %>% 
   pivot_longer(part_1:part_8, values_to = "edu_target_audience", names_to = NULL, values_drop_na = T) %>% 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Government officials and community leaders and community leaders" ~ "Government officials and community leaders", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Native and Native and Indigenous communities" ~ "Native and Indigenous communities", TRUE ~ edu_target_audience)) |> 
   group_by(edu_target_audience) %>% 
   summarize(n_strategies = length(unique(obs_id)),
             n_plans = length(unique(plan_id))) %>% 
   mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
          percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
+ 
 ```
 
 ## plots
+
 ```{r}
-library(ggplot2)
-target_barplot <- ggplot(target, aes(x = edu_target_audience)) +
-  geom_bar(aes(y = n_strategies, fill = "Numbner of Strategies"), stat = "identity", position = "dodge") +
-  geom_bar(aes(y = n_plans, fill = "Number of Plans"), stat = "identity", position = "dodge") +
-  labs(title = "Counts of Stategies and Plans by Educational Target Audience",
-       x = "Educational Target Audience",
-       y = "Count",
-       fill = "type") +
-  theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1))
+test = target |> 
+  pivot_longer(cols = c("n_plans", "n_strategies"), values_to = "count") |> 
+  mutate(edu_target_audience = fct_reorder(edu_target_audience, count, .desc = TRUE))
+
+test_plot = ggplot(data = test, aes(x = edu_target_audience, y = count, fill = name)) +
+   geom_bar( stat = "identity", position = position_dodge()) +
+   labs(title = "Counts of Stategies and Plans by Educational Target Audience",
+        x = "Educational Target Audience",
+        y = "Count",
+        fill = "type") +
+    theme_minimal() +
+  scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd")) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
+test_plot
 ```
+
+# Nots
+* plans and strategies in separate graphs
+* in descending order
+* consolidate redundant categories
+* aes -- finalized version with vertical and horizontal bars
+  * readability
+  * rename categories
+  * no legend
 
 # EDU WHAT
 * edu_what is social strategies and action steps of each overarching educational strategy
@@ -62,14 +82,21 @@ edu_what <- orig_list |>
 
 ## plots
 ```{r}
-ggplot(edu_what, aes(x = strategy_type)) +
-  geom_bar(aes(y = n_strategies, fill = "Number of Strategies"), stat = "identity", position = "dodge") +
-  geom_bar(aes(y = n_plans, fill = "Number of Plans"), stat = "identity", position = "dodge") +
+edu_what_plot = edu_what |> 
+  pivot_longer(cols = c("n_strategies", "n_plans"), values_to = "count") |> 
+  mutate(strategy_type = fct_reorder(strategy_type, count, .desc = TRUE))
+  
+ggplot(data = edu_what_plot, aes(x = strategy_type, y = count, fill = name)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
   labs(title = "Counts of Strategies and Plans by Educational Strategy",
        x = "Educational Strategy",
        y = "Count",
        fill = "type") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5), 
+  theme_minimal() +
+  scale_fill_manual(values = c("n_strategies" = "#57a6ad", "n_plans" = "#a8e0e6")) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1, size = 5), 
         plot.margin = margin(10, 10, 20, 30))
 ```
 
+QUESTIONS
+* how to read the orig_list
