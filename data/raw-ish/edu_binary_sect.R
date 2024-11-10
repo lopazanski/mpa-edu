@@ -13,7 +13,13 @@ distinct_plans <- orig_list |>
   
 edu_sect <- orig_list |> 
   filter(edu_section_binary == 1 | edu_section_binary == 0) |> 
-  distinct(plan_id, edu_section_binary, name) |> 
+  distinct(plan_id, edu_section_binary, name) 
+
+sum(edu_sect$edu_section_binary)
+
+edu_sect_summary <- edu_sect |> 
+  group_by(edu_section_binary) |> 
+  count() # or summarize(n = n())
   
 n_yes <- edu_sect |> 
   filter(edu_section_binary == 1) |> 
