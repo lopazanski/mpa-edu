@@ -1,0 +1,143 @@
+---
+title: "EDU binary"
+output: pdf_document
+date: "2024-11-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+```
+
+```{r}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
+```
+
+# Education Section Binary
+Does the plan have an education plan? 
+
+```{r EDU binary summary}
+edu_sect <- orig_list |> 
+  filter(edu_section_binary == 1 | edu_section_binary == 0) |> 
+  distinct(plan_id, name, edu_section_binary)
+  
+edu_sect_summary <- edu_sect |> 
+  group_by(edu_section_binary) |> 
+  count()
+```
+
+```{r number of plans WITH edu section}
+n_yes <- edu_sect |> 
+  filter(edu_section_binary == 1) |> 
+  count()
+```
+
+```{r plot}
+edu_binary_df <- data.frame(edu = c(0, 1), count = c(23, 149))
+
+ggplot(edu_binary_df, aes(x = factor(edu), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Number of Plans with Education Section",
+       x = "Education Section",
+       y = "Count") +
+  scale_x_discrete(label = c("0" = "no", "1" = "yes")) + 
+  theme_minimal()
+```
+
+# EDU staff binary
+Is the education section staffed? 
+
+```{r}
+staff_binary <- orig_list |> 
+  filter(edu_staff_binary == 0 | edu_staff_binary == 1) |> 
+  distinct( plan_id, name, edu_staff_binary)
+
+staff_binary_summary <- staff_binary |> 
+  group_by(edu_staff_binary) |> 
+  count()
+```
+```{r EDU staff plot}
+staff_binary_df <- data.frame(staff = c(0, 1), count = c(49, 105))
+
+staff_binary_plot <- ggplot(data = staff_binary_df, aes(x = factor(staff), y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Number of Plans with Staffed Education Section", x = "Staff", y = "count") +
+  scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
+  theme_minimal()
+```
+
+# EDU funding
+Does the plan's education section have funding? 
+
+```{r}
+funding_binary <- orig_list |> 
+  filter(edu_funding_binary == 0 | edu_funding_binary == 1) |> 
+  distinct(plan_id, name, edu_funding_binary)
+
+funding_binary_summary <- funding_binary |> 
+  group_by(edu_funding_binary) |> 
+  count()
+```
+
+```{r funding binary plot}
+funding_binary_df <- data.frame(funding = c(0,1), count = c(134, 27))
+
+funding_binary_plot <- ggplot(funding_binary_df, aes(x = factor(funding), y = count)) +
+  geom_bar(stat = "identity", fill = "violet") +
+  labs(title = "Number of Plans with Funded Education Section", x = "Funding", y = "count") +
+  scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
+  theme_minimal()
+```
+
+```{r}
+# 
+# # Install and load cowplot if not already installed
+# install.packages("cowplot")
+# library(cowplot)
+# 
+# # Arrange the plots side by side
+# plot_grid(funding_binary_plot, staff_binary_plot, ncol = 2)
+```
+
+# EDU outcome
+A measurable outcome detailed by the plan was achieved or not
+
+```{r}
+outcome_binary <- orig_list |> 
+  filter(edu_outcome_binary == 1 | edu_outcome_binary == 0) |> 
+  distinct(plan_id, name, edu_outcome_binary)
+
+outcome_binary_summary <- outcome_binary |> 
+  group_by(edu_outcome_binary) |> 
+  count()
+```
+
+# EDU indicator binary
+indicates whether the plan's desired outcomes were met or not
+
+```{r}
+indicator_binary <- orig_list |> 
+  filter(edu_indicator_binary == 1 | edu_indicator_binary == 0) |> 
+  distinct(plan_id, name, edu_indicator_binary)
+
+indicator_binary_summary <- indicator_binary |> 
+  group_by(edu_indicator_binary) |> 
+  count()
+```
+
+# Results
+
+```{r}
+# Data frame by row; columns are objective, yes, no, total, percentage yes
+
+objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
+n_yes_total <- c(149, 105, 27, 116, 51)
+n_no <- c(23, 49, 134, 40, 110)
+n_total <- c(172, 154, 134, 156, 161)
+percentages <- c(86.6, 68.2, 16.8, 74.4, 31.8)
+result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
+
+kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
+```
+
