@@ -6,6 +6,12 @@ date: "2024-11-10"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+```
+
+```{r}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
 ```
 
 # Education Section Binary
@@ -85,12 +91,53 @@ funding_binary_plot <- ggplot(funding_binary_df, aes(x = factor(funding), y = co
 ```
 
 ```{r}
+# 
+# # Install and load cowplot if not already installed
+# install.packages("cowplot")
+# library(cowplot)
+# 
+# # Arrange the plots side by side
+# plot_grid(funding_binary_plot, staff_binary_plot, ncol = 2)
+```
 
-# Install and load cowplot if not already installed
-install.packages("cowplot")
-library(cowplot)
+# EDU outcome
+A measurable outcome detailed by the plan was achieved or not
 
-# Arrange the plots side by side
-plot_grid(funding_binary_plot, staff_binary_plot, ncol = 2)
+```{r}
+outcome_binary <- orig_list |> 
+  filter(edu_outcome_binary == 1 | edu_outcome_binary == 0) |> 
+  distinct(plan_id, name, edu_outcome_binary)
+
+outcome_binary_summary <- outcome_binary |> 
+  group_by(edu_outcome_binary) |> 
+  count()
+```
+
+# EDU indicator binary
+indicates whether the plan's desired outcomes were met or not
+
+```{r}
+indicator_binary <- orig_list |> 
+  filter(edu_indicator_binary == 1 | edu_indicator_binary == 0) |> 
+  distinct(plan_id, name, edu_indicator_binary)
+
+indicator_binary_summary <- indicator_binary |> 
+  group_by(edu_indicator_binary) |> 
+  count()
+```
+
+# Results
+
+```{r}
+# Data frame by row; columns are objective, yes, no, total, percentage yes
+
+objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
+n_yes_total <- c(149, 105, 27, 116, 51)
+n_no <- c(23, 49, 134, 40, 110)
+n_total <- c(172, 154, 134, 156, 161)
+percentages <- c(86.6, 68.2, 16.8, 74.4, 31.8)
+result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
+
+kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
 ```
 
