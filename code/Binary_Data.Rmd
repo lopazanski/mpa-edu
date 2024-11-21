@@ -19,24 +19,32 @@ Does the plan have an education plan?
 
 ```{r EDU binary summary}
 edu_sect <- orig_list |> 
-  filter(edu_section_binary == 1 | edu_section_binary == 0) |> 
-  distinct(plan_id, name, edu_section_binary)
+  distinct(plan_id, name, edu_section_binary) 
   
+edu_sect_wide <- pivot_wider(edu_sect, names_from = edu_section_binary,
+              names_prefix = "value",
+              values_from = name)
+
 edu_sect_summary <- edu_sect |> 
   group_by(edu_section_binary) |> 
   count()
+
+edu_sect_yes <- edu_sect |> 
+  filter(edu_section_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+edu_sect_no <- edu_sect |> 
+  filter(edu_section_binary == 0) |> 
+  count() |> 
+  pull(n)
+
+# pivot wider (names prefix)
 ```
 
-```{r number of plans WITH edu section}
-n_yes <- edu_sect |> 
-  filter(edu_section_binary == 1) |> 
-  count()
-```
 
 ```{r plot}
-edu_binary_df <- data.frame(edu = c(0, 1), count = c(23, 149))
-
-ggplot(edu_binary_df, aes(x = factor(edu), y = count)) +
+ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(title = "Number of Plans with Education Section",
        x = "Education Section",
@@ -50,17 +58,38 @@ Is the education section staffed?
 
 ```{r}
 staff_binary <- orig_list |> 
-  filter(edu_staff_binary == 0 | edu_staff_binary == 1) |> 
-  distinct( plan_id, name, edu_staff_binary)
+  distinct( plan_id, name, edu_staff_binary) |> 
+  mutate(edu_staff_binary = replace_na(edu_staff_binary, 0))
 
-staff_binary_summary <- staff_binary |> 
+staff_binary_wider <- 
+  pivot_wider(data = staff_binary,
+              names_from = edu_staff_binary,
+              values_from = edu_staff_binary,
+              names_prefix = "value") |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1), 
+               values_to = "edu_staff_binary", 
+               names_to = NULL, 
+               values_drop_na = TRUE)
+staff_binary_summary <- staff_binary_wider |> 
   group_by(edu_staff_binary) |> 
   count()
-```
-```{r EDU staff plot}
-staff_binary_df <- data.frame(staff = c(0, 1), count = c(49, 105))
 
-staff_binary_plot <- ggplot(data = staff_binary_df, aes(x = factor(staff), y = count)) +
+staff_yes <- staff_binary_wider |> 
+  filter(edu_staff_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+staff_no <- staff_binary_wider |> 
+  filter(edu_staff_binary == 0) |> 
+  count() |> 
+  pull(n)
+
+```
+
+```{r EDU staff plot}
+
+staff_binary_plot <- ggplot(data = staff_binary_summary, aes(x = factor(edu_staff_binary), y = n)) +
   geom_bar(stat = "identity", fill = "lightgreen") +
   labs(title = "Number of Plans with Staffed Education Section", x = "Staff", y = "count") +
   scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
@@ -72,45 +101,83 @@ Does the plan's education section have funding?
 
 ```{r}
 funding_binary <- orig_list |> 
-  filter(edu_funding_binary == 0 | edu_funding_binary == 1) |> 
-  distinct(plan_id, name, edu_funding_binary)
+  distinct(plan_id, name, edu_funding_binary) |> 
+  mutate(edu_funding_binary = replace_na(edu_funding_binary, 0))
 
-funding_binary_summary <- funding_binary |> 
+funding_binary_wider <- funding_binary |> 
+  pivot_wider(
+    values_from = edu_funding_binary,
+    names_prefix = "value",
+    names_from = edu_funding_binary
+  ) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0))
+
+funding_binary_final <- funding_binary_wider |> 
+  pivot_longer(
+    cols = c(value0, value1),
+    values_to = "edu_funding_binary", 
+    names_to = NULL,
+    values_drop_na = TRUE
+  )
+  
+  
+funding_binary_summary <- funding_binary_final |> 
   group_by(edu_funding_binary) |> 
   count()
+
+funding_yes <- funding_binary_final |> 
+  filter(edu_funding_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+funding_no <- funding_binary_final |> 
+  filter(edu_funding_binary == 0) |> 
+  count() |> 
+  pull(n)
 ```
 
 ```{r funding binary plot}
-funding_binary_df <- data.frame(funding = c(0,1), count = c(134, 27))
 
-funding_binary_plot <- ggplot(funding_binary_df, aes(x = factor(funding), y = count)) +
+funding_binary_plot <- ggplot(funding_binary_summary, aes(x = factor(edu_funding_binary), y = n)) +
   geom_bar(stat = "identity", fill = "violet") +
   labs(title = "Number of Plans with Funded Education Section", x = "Funding", y = "count") +
   scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
   theme_minimal()
+funding_binary_plot
 ```
 
-```{r}
-# 
-# # Install and load cowplot if not already installed
-# install.packages("cowplot")
-# library(cowplot)
-# 
-# # Arrange the plots side by side
-# plot_grid(funding_binary_plot, staff_binary_plot, ncol = 2)
-```
 
 # EDU outcome
 A measurable outcome detailed by the plan was achieved or not
 
 ```{r}
 outcome_binary <- orig_list |> 
-  filter(edu_outcome_binary == 1 | edu_outcome_binary == 0) |> 
-  distinct(plan_id, name, edu_outcome_binary)
+  distinct(plan_id, name, edu_outcome_binary) |> 
+  mutate(edu_outcome_binary = replace_na(edu_outcome_binary, 0))
 
-outcome_binary_summary <- outcome_binary |> 
+outcome <- outcome_binary |> 
+  pivot_wider(values_from = edu_outcome_binary,
+              names_prefix = "value",
+              names_from = edu_outcome_binary) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1),
+               values_to = "edu_outcome_binary",
+               names_to = NULL, 
+               values_drop_na = TRUE)
+
+outcome_binary_summary <- outcome |> 
   group_by(edu_outcome_binary) |> 
   count()
+
+outcome_yes <- outcome |> 
+  filter(edu_outcome_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+outcome_no <- outcome |> 
+  filter(edu_outcome_binary == 0) |> 
+  count() |> 
+  pull(n)
 ```
 
 # EDU indicator binary
@@ -118,12 +185,30 @@ indicates whether the plan's desired outcomes were met or not
 
 ```{r}
 indicator_binary <- orig_list |> 
-  filter(edu_indicator_binary == 1 | edu_indicator_binary == 0) |> 
-  distinct(plan_id, name, edu_indicator_binary)
-
+  distinct(plan_id, name, edu_indicator_binary) |> 
+  mutate(edu_indicator_binary = replace_na(edu_indicator_binary, 0)) |> 
+  pivot_wider(values_from = edu_indicator_binary,
+              names_prefix = "value",
+              names_from = edu_indicator_binary) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1),
+               names_to = NULL, 
+               values_to = "edu_indicator_binary",
+               values_drop_na = TRUE)
+  
 indicator_binary_summary <- indicator_binary |> 
   group_by(edu_indicator_binary) |> 
   count()
+
+indicator_yes <- indicator_binary |> 
+  filter(edu_indicator_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+indicator_no <- indicator_binary |> 
+  filter(edu_indicator_binary == 0) |> 
+  count() |> 
+  pull(n)
 ```
 
 # Results
@@ -132,12 +217,41 @@ indicator_binary_summary <- indicator_binary |>
 # Data frame by row; columns are objective, yes, no, total, percentage yes
 
 objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
-n_yes_total <- c(149, 105, 27, 116, 51)
-n_no <- c(23, 49, 134, 40, 110)
-n_total <- c(172, 154, 134, 156, 161)
-percentages <- c(86.6, 68.2, 16.8, 74.4, 31.8)
+n_yes_total <- c(edu_sect_yes, staff_yes, funding_yes, outcome_yes, indicator_yes)
+n_no <- c(edu_sect_no, staff_no, funding_no, outcome_no, indicator_no)
+n_total <- c(n_yes_total + n_no)
+percentages <- round(c((n_yes_total/n_total)*100), 2)
 result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
 
 kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
 ```
 
+```{r plots}
+# percent of plans that have each attribute
+objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
+percentages <- round(c((n_yes_total/n_total)*100), 2)
+
+percent_df <- data.frame(objective = objective, percentages = percentages)
+
+summary_percent_plot <- ggplot(data = percent_df,
+                         mapping = aes(x = reorder(factor(objective), -percentages), y = percentages)) +
+  geom_bar(stat = "identity", fill = "#32a89e") +
+  labs(title = "Percentage of Plans Fulfilling Each Objective", x = "Objective", y = "Percentage") +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Number of Plans with Education Section",
+       x = "Education Section",
+       y = "Count") +
+  scale_x_discrete(label = c("1" = "yes", "0" = "no")) + 
+  theme_minimal()
+
+
+```
+
+# facet_wrap
+# grid extra
