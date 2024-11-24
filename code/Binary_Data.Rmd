@@ -224,6 +224,44 @@ percentages <- round(c((n_yes_total/n_total)*100), 2)
 result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
 
 kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
+
+# Load necessary libraries
+library(tidyverse)
+library(knitr)
+
+# Data
+objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
+n_yes_total <- c(149, 105, 27, 116, 51)
+n_no <- c(23, 67, 145, 56, 121)
+n_total <- n_yes_total + n_no
+percentages <- round((n_yes_total / n_total) * 100, 2)
+
+result_df <- data.frame(
+  objective = objective,
+  yes = n_yes_total,
+  no = n_no,
+  total = n_total,
+  percent = percentages
+)
+
+# Display table
+kable(result_df, col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
+
+# Reshape the data to long format for ggplot
+result_long <- result_df %>%
+  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count")
+
+# Create the barplot
+ggplot(result_long, aes(x = objective, y = count, fill = response)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Comparison of Yes and No Responses for Each Objective",
+    x = "Objective",
+    y = "Count",
+    fill = "Response"
+  ) +
+  theme_minimal()
+
 ```
 
 ```{r plots}
@@ -242,7 +280,9 @@ summary_percent_plot <- ggplot(data = percent_df,
 ```
 
 ```{r}
-ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
+
+# edu section binary
+edu_section_plot <- ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(title = "Number of Plans with Education Section",
        x = "Education Section",
@@ -250,7 +290,36 @@ ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
   scale_x_discrete(label = c("1" = "yes", "0" = "no")) + 
   theme_minimal()
 
+# staff binary 
+staff_binary_plot <- ggplot(data = staff_binary_summary, aes(x = factor(edu_staff_binary), y = n)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Number of Plans with Staffed Education Section", x = "Staff", y = "count") +
+  scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
+  theme_minimal()
 
+# funding binary
+funding_binary_plot <- ggplot(funding_binary_summary, aes(x = factor(edu_funding_binary), y = n)) +
+  geom_bar(stat = "identity", fill = "violet") +
+  labs(title = "Number of Plans with Funded Education Section", x = "Funding", y = "count") +
+  scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
+  theme_minimal()
+
+# outcome binary
+
+outcome_plot <- ggplot(outcome_binary_summary, aes(x = factor(edu_outcome_binary), y = n)) +
+  geom_bar(stat = "identity", fill = "yellow") +
+  labs(title = "Number of Plans Fulfilling Detailed Outcomes", x = "Outcome", y = "count") +
+  scale_x_discrete(label = c("0" = "No specified outcome", "1" = "Has Specified Outcome")) +
+  theme_minimal()
+
+# indicator binary
+indicator_plot <- ggplot(indicator_binary_summary, aes(x = factor(edu_indicator_binary), y = n)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  labs(title = "Plans With Outcome Objectives", x = "Indicator", y = "count") +
+  scale_x_discrete(label = c("0" = "No Specified Indicator", "1"= "Has Indicated Outcome Objective")) +
+  theme_minimal()
+
+grid.arrange(edu_section_plot, staff_binary_plot, funding_binary_plot, outcome_plot, indicator_plot, ncol = 2)
 ```
 
 # facet_wrap

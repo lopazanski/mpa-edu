@@ -100,3 +100,11 @@ ggplot(data = edu_what_plot, aes(x = strategy_type, y = count, fill = name)) +
 
 QUESTIONS
 * how to read the orig_list
+
+```{r}
+content_type <- orig_list |> 
+  distinct(obs_id, plan_id, edu_content_type) |> 
+  group_by(edu_content_type) |> 
+  summarize(n_strategies = length(unique(obs_id)), n_plans = length(unique(plan_id)))
+```
+
