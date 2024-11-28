@@ -27,6 +27,7 @@ edu_sect_wide <- pivot_wider(edu_sect, names_from = edu_section_binary,
 
 edu_sect_summary <- edu_sect |> 
   group_by(edu_section_binary) |> 
+  mutate(edu_section_binary = factor(edu_section_binary, levels = c("1", "0"))) |> # factor and set levels order
   count()
 
 edu_sect_yes <- edu_sect |> 
@@ -44,13 +45,14 @@ edu_sect_no <- edu_sect |>
 
 
 ```{r plot}
-ggplot(edu_sect_summary, aes(x = factor(edu_section_binary), y = n)) +
+ggplot(edu_sect_summary, aes(x = edu_section_binary, y = n)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(title = "Number of Plans with Education Section",
        x = "Education Section",
        y = "Count") +
-  scale_x_discrete(label = c("0" = "no", "1" = "yes")) + 
-  theme_minimal()
+  scale_x_discrete(labels = c("1" = "yes", "0" = "no")) + 
+  theme_minimal() +
+  geom_text(aes(label = n), vjust = -0.5)
 ```
 
 # EDU staff binary
@@ -73,6 +75,7 @@ staff_binary_wider <-
                values_drop_na = TRUE)
 staff_binary_summary <- staff_binary_wider |> 
   group_by(edu_staff_binary) |> 
+  mutate(edu_staff_binary = factor(edu_staff_binary, levels = c("1", "0"))) |> 
   count()
 
 staff_yes <- staff_binary_wider |> 
@@ -89,10 +92,11 @@ staff_no <- staff_binary_wider |>
 
 ```{r EDU staff plot}
 
-staff_binary_plot <- ggplot(data = staff_binary_summary, aes(x = factor(edu_staff_binary), y = n)) +
+staff_binary_plot <- ggplot(data = staff_binary_summary, aes(x = edu_staff_binary, y = n)) +
   geom_bar(stat = "identity", fill = "lightgreen") +
   labs(title = "Number of Plans with Staffed Education Section", x = "Staff", y = "count") +
   scale_x_discrete(label = c("0" = "no", "1" = "yes")) +
+   geom_text(aes(label = n), vjust = -0.5) +
   theme_minimal()
 ```
 
@@ -249,33 +253,61 @@ kable(result_df, col.names = c("Objective", "Yes", "No", "Total", "Percentage Ye
 
 # Reshape the data to long format for ggplot
 result_long <- result_df %>%
-  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count")
+  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count") 
+  # NEED TO: reorder 
+# take 2:
+
+result2 <- result_df |> 
+  arrange(desc(yes)) # reorders df by the yes count
+
+
+ggplot(result2, aes(x = reorder(objective, -yes), y = yes, fill = objective)) +
+  geom_bar(stat = "identity") + 
+  theme_minimal() +
+  scale_fill_manual(values = c("EDU" = "#B5B1B2", "Staff" = "#ADA9B7", "Outcome" = "#A9AFD1", "Indicator" = "#A1CDF4", "Funding" = "#7C809B")) +
+  theme(legend.position = "none") +
+  labs(title = "Number of Plans Fulfilling Specified Objective", y = "Count", x = NULL) +
+  geom_text(aes(label = paste0(percent, "%")), vjust = 0.05) # labels bars with percent of plans that are yes
+
 
 # Create the barplot
 ggplot(result_long, aes(x = objective, y = count, fill = response)) +
-  geom_bar(stat = "identity", position = "dodge") +
+  geom_bar(stat = "identity", position = "stack") +
   labs(
     title = "Comparison of Yes and No Responses for Each Objective",
     x = "Objective",
     y = "Count",
     fill = "Response"
   ) +
-  theme_minimal()
+  theme_minimal() 
+  # Put count values and percents on plot
+
+# export all figures into slides
 
 ```
 
 ```{r plots}
 # percent of plans that have each attribute
-objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
-percentages <- round(c((n_yes_total/n_total)*100), 2)
+# objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
+# percentages <- round(c((n_yes_total/n_total)*100), 2)
+# 
+# percent_df <- data.frame(objective = objective, percentages = percentages)
+# 
+# summary_percent_plot <- ggplot(data = percent_df,
+#                          mapping = aes(x = reorder(factor(objective), -percentages), y = percentages)) +
+#   geom_bar(stat = "identity", fill = "#32a89e") +
+#   labs(title = "Percentage of Plans Fulfilling Each Objective", x = "Objective", y = "Percentage") +
+#   theme_minimal()
 
-percent_df <- data.frame(objective = objective, percentages = percentages)
 
-summary_percent_plot <- ggplot(data = percent_df,
-                         mapping = aes(x = reorder(factor(objective), -percentages), y = percentages)) +
+# alternatively: using og df instead of extracting and creating a new df
+ggplot(data = result_df, 
+       mapping = aes(x = reorder(factor(objective), -percent), y = percent)) +
   geom_bar(stat = "identity", fill = "#32a89e") +
-  labs(title = "Percentage of Plans Fulfilling Each Objective", x = "Objective", y = "Percentage") +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Percentage of Plans Fulfilling Each Objective", x = NULL, y = "Percentage") +
+  geom_text(aes(label = paste0(percent, "%")), vjust = -0.5) + # add percentage label
+  scale_y_continuous(limits = c(0, 100)) # set scale from 0-100
 
 ```
 
