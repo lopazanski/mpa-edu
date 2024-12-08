@@ -253,13 +253,9 @@ kable(result_df, col.names = c("Objective", "Yes", "No", "Total", "Percentage Ye
 
 # Reshape the data to long format for ggplot
 result_long <- result_df %>%
-  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count") 
+  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count") |> 
+  mutate(objective = fct_reorder(objective, count, .desc = TRUE))
   # NEED TO: reorder 
-# take 2:
-
-result2 <- result_df |> 
-  arrange(desc(yes)) # reorders df by the yes count
-
 
 ggplot(result2, aes(x = reorder(objective, -yes), y = yes, fill = objective)) +
   geom_bar(stat = "identity") + 
@@ -284,6 +280,51 @@ ggplot(result_long, aes(x = objective, y = count, fill = response)) +
 
 # export all figures into slides
 
+```
+```{r}
+# Reshape the data to long format for ggplot
+result_long <- result_df %>%
+  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count") |> 
+  mutate(objective = fct_reorder(objective, count, .desc = TRUE))
+  # NEED TO: reorder 
+
+result_long <- result_df %>%
+  pivot_longer(cols = c("yes", "no"), names_to = "response", values_to = "count") %>%
+  group_by(objective) %>%
+  # Summing "yes" counts for reordering
+  mutate(total_yes = sum(count[response == "yes"])) %>%
+  ungroup() %>%
+  # Reorder based on "yes" counts
+  mutate(objective = fct_reorder(objective, total_yes, .desc = TRUE))
+
+result_long <- result_long %>%
+  # Ensure "yes" is plotted before "no"
+  mutate(response = factor(response, levels = c("yes", "no"))) %>%
+  # Calculate the total "yes" count for each objective and reorder
+  group_by(objective) %>%
+  mutate(total_yes = sum(count[response == "yes"])) %>%
+  ungroup() %>%
+  mutate(objective = fct_reorder(objective, total_yes, .desc = TRUE))
+
+result_test = ggplot(data = result_long, aes(x = objective, y = count, fill = response)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Response Counts of Each Objective", 
+       x = "objective",
+       y = "count", 
+       fill = "response") + 
+  theme_minimal() +
+  scale_fill_manual(values = c("yes" = "#afa3c4", "no" = "#e8defa"))
+result_test
+# test_plot = ggplot(data = test, aes(x = edu_target_audience, y = count, fill = name)) +
+#    geom_bar( stat = "identity", position = position_dodge()) +
+#    labs(title = "Counts of Stategies and Plans by Educational Target Audience",
+#         x = "Educational Target Audience",
+#         y = "Count",
+#         fill = "type") +
+#     theme_minimal() +
+#   scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd")) +
+#   theme(legend.position = "none", axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
+# test_plot
 ```
 
 ```{r plots}
@@ -353,6 +394,12 @@ indicator_plot <- ggplot(indicator_binary_summary, aes(x = factor(edu_indicator_
 
 grid.arrange(edu_section_plot, staff_binary_plot, funding_binary_plot, outcome_plot, indicator_plot, ncol = 2)
 ```
+edu_sect_summary
+staff_binary_summary
+funding_binary_summary
+outcome_binary_summary
+indicator_binary_summary
+```{r}
 
-# facet_wrap
-# grid extra
+```
+

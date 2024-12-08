@@ -53,7 +53,7 @@ test_plot = ggplot(data = test, aes(x = edu_target_audience, y = count, fill = n
         fill = "type") +
     theme_minimal() +
   scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd")) +
-  theme(legend.position = "none", axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
+  theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
 test_plot
 ```
 
