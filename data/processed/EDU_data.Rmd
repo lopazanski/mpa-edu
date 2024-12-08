@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyverse)
 library(forcats)
+library(stringr)
 ```
 
 # Target Audience
@@ -22,7 +23,7 @@ target quantifies how many strategies and plans are aimed at each recipient
 * percent_of_strategies is the percent of strategies that target a recipient
 * percent_of_plans is the percent of plans that target a recipient
 ```{r}
- orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
+ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
 target <- orig_list %>% 
   distinct(obs_id, plan_id, edu_target_audience) %>% 
   separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
@@ -52,7 +53,9 @@ test_plot = ggplot(data = test, aes(x = edu_target_audience, y = count, fill = n
         y = "Count",
         fill = "type") +
     theme_minimal() +
-  scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd")) +
+  scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd"),
+                    labels = c("n_strategies" = "Strategies", "n_plans" = "Plans")) +
+  scale_color_manual(labels = c("number of strategies", "number of plans")) +
   theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
 test_plot
 ```
@@ -82,20 +85,23 @@ edu_what <- orig_list |>
 
 ## plots
 ```{r}
-edu_what_plot = edu_what |> 
+edu_what_toplot = edu_what |> 
   pivot_longer(cols = c("n_strategies", "n_plans"), values_to = "count") |> 
-  mutate(strategy_type = fct_reorder(strategy_type, count, .desc = TRUE))
+  mutate(strategy_type = fct_reorder(strategy_type, count, .desc = TRUE)) |>  # Reorder 
+  mutate(strategy_type = fct_relabel(strategy_type, ~ str_wrap(.x, width = 30)))  # wrap labels
+
   
-ggplot(data = edu_what_plot, aes(x = strategy_type, y = count, fill = name)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  labs(title = "Counts of Strategies and Plans by Educational Strategy",
+edu_what_plot <- ggplot(data = edu_what_toplot, aes(x = strategy_type, y = count, fill = name)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+   labs(title = "Counts of Strategies and Plans by Educational Strategy",
        x = "Educational Strategy",
        y = "Count",
        fill = "type") +
   theme_minimal() +
-  scale_fill_manual(values = c("n_strategies" = "#57a6ad", "n_plans" = "#a8e0e6")) +
-  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1, size = 5), 
-        plot.margin = margin(10, 10, 20, 30))
+  scale_fill_manual(values = c("n_strategies" = "#57a6ad", "n_plans" = "#a8e0e6"),
+                    labels = c("n_strategies" = "Strategies", "n_plans" = "Plans")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5), 
+        plot.margin = margin(10, 10, 20, 30)) 
 ```
 
 QUESTIONS
@@ -106,5 +112,10 @@ content_type <- orig_list |>
   distinct(obs_id, plan_id, edu_content_type) |> 
   group_by(edu_content_type) |> 
   summarize(n_strategies = length(unique(obs_id)), n_plans = length(unique(plan_id)))
+```
+
+```{r}
+ggsave("edu_what_plot.png", edu_what_plot)
+ggsave("edu_target_plot.png", test_plot)
 ```
 

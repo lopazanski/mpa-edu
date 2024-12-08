@@ -227,29 +227,20 @@ n_total <- c(n_yes_total + n_no)
 percentages <- round(c((n_yes_total/n_total)*100), 2)
 result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
 
-kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
+#binary_result_table <- kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes")) 
+binary_result_table <- kable(
+  result_df,
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"),
+  format = "html",  # HTML format required for saving as an image
+  caption = "Binary Results Summary"
+) %>%
+  kable_styling()
 
+# Save the table as a PNG image
+save_kable(binary_result_table, "binary_result_table.png")
 # Load necessary libraries
 library(tidyverse)
 library(knitr)
-
-# Data
-objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
-n_yes_total <- c(149, 105, 27, 116, 51)
-n_no <- c(23, 67, 145, 56, 121)
-n_total <- n_yes_total + n_no
-percentages <- round((n_yes_total / n_total) * 100, 2)
-
-result_df <- data.frame(
-  objective = objective,
-  yes = n_yes_total,
-  no = n_no,
-  total = n_total,
-  percent = percentages
-)
-
-# Display table
-kable(result_df, col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"))
 
 # Reshape the data to long format for ggplot
 result_long <- result_df %>%
@@ -257,7 +248,7 @@ result_long <- result_df %>%
   mutate(objective = fct_reorder(objective, count, .desc = TRUE))
   # NEED TO: reorder 
 
-ggplot(result2, aes(x = reorder(objective, -yes), y = yes, fill = objective)) +
+results_percent <- ggplot(result_df, aes(x = reorder(objective, -yes), y = yes, fill = objective)) +
   geom_bar(stat = "identity") + 
   theme_minimal() +
   scale_fill_manual(values = c("EDU" = "#B5B1B2", "Staff" = "#ADA9B7", "Outcome" = "#A9AFD1", "Indicator" = "#A1CDF4", "Funding" = "#7C809B")) +
@@ -265,7 +256,7 @@ ggplot(result2, aes(x = reorder(objective, -yes), y = yes, fill = objective)) +
   labs(title = "Number of Plans Fulfilling Specified Objective", y = "Count", x = NULL) +
   geom_text(aes(label = paste0(percent, "%")), vjust = 0.05) # labels bars with percent of plans that are yes
 
-
+ggsave("results_percent.png", results_percent)
 # Create the barplot
 ggplot(result_long, aes(x = objective, y = count, fill = response)) +
   geom_bar(stat = "identity", position = "stack") +
@@ -277,8 +268,6 @@ ggplot(result_long, aes(x = objective, y = count, fill = response)) +
   ) +
   theme_minimal() 
   # Put count values and percents on plot
-
-# export all figures into slides
 
 ```
 ```{r}
@@ -315,41 +304,20 @@ result_test = ggplot(data = result_long, aes(x = objective, y = count, fill = re
   theme_minimal() +
   scale_fill_manual(values = c("yes" = "#afa3c4", "no" = "#e8defa"))
 result_test
-# test_plot = ggplot(data = test, aes(x = edu_target_audience, y = count, fill = name)) +
-#    geom_bar( stat = "identity", position = position_dodge()) +
-#    labs(title = "Counts of Stategies and Plans by Educational Target Audience",
-#         x = "Educational Target Audience",
-#         y = "Count",
-#         fill = "type") +
-#     theme_minimal() +
-#   scale_fill_manual(values = c("n_strategies" = "#57ad5e", "n_plans" = "#b9ebbd")) +
-#   theme(legend.position = "none", axis.text.x = element_text(angle = 45, size = 5, hjust = 1)) 
-# test_plot
+
+ggsave("response_results.png", result_test)
 ```
 
 ```{r plots}
-# percent of plans that have each attribute
-# objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
-# percentages <- round(c((n_yes_total/n_total)*100), 2)
-# 
-# percent_df <- data.frame(objective = objective, percentages = percentages)
-# 
-# summary_percent_plot <- ggplot(data = percent_df,
-#                          mapping = aes(x = reorder(factor(objective), -percentages), y = percentages)) +
-#   geom_bar(stat = "identity", fill = "#32a89e") +
-#   labs(title = "Percentage of Plans Fulfilling Each Objective", x = "Objective", y = "Percentage") +
-#   theme_minimal()
-
-
 # alternatively: using og df instead of extracting and creating a new df
-ggplot(data = result_df, 
+plans_percent <- ggplot(data = result_df, 
        mapping = aes(x = reorder(factor(objective), -percent), y = percent)) +
   geom_bar(stat = "identity", fill = "#32a89e") +
   theme_minimal() +
   labs(title = "Percentage of Plans Fulfilling Each Objective", x = NULL, y = "Percentage") +
   geom_text(aes(label = paste0(percent, "%")), vjust = -0.5) + # add percentage label
   scale_y_continuous(limits = c(0, 100)) # set scale from 0-100
-
+ggsave("plans_percent.png", plans_percent)
 ```
 
 ```{r}
@@ -394,12 +362,3 @@ indicator_plot <- ggplot(indicator_binary_summary, aes(x = factor(edu_indicator_
 
 grid.arrange(edu_section_plot, staff_binary_plot, funding_binary_plot, outcome_plot, indicator_plot, ncol = 2)
 ```
-edu_sect_summary
-staff_binary_summary
-funding_binary_summary
-outcome_binary_summary
-indicator_binary_summary
-```{r}
-
-```
-
