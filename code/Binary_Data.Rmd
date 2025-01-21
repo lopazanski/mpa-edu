@@ -220,9 +220,9 @@ indicator_no <- indicator_binary |>
 ```{r}
 # Data frame by row; columns are objective, yes, no, total, percentage yes
 
-objective <- c("EDU", "Staff", "Funding", "Outcome", "Indicator")
-n_yes_total <- c(edu_sect_yes, staff_yes, funding_yes, outcome_yes, indicator_yes)
-n_no <- c(edu_sect_no, staff_no, funding_no, outcome_no, indicator_no)
+objective <- c("Staff", "Funding", "Outcome", "Indicator")
+n_yes_total <- c(staff_yes, funding_yes, outcome_yes, indicator_yes)
+n_no <- c(staff_no, funding_no, outcome_no, indicator_no)
 n_total <- c(n_yes_total + n_no)
 percentages <- round(c((n_yes_total/n_total)*100), 2)
 result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
