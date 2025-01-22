@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(kableExtra)
 library(tidyverse)
 library(knitr)
+library(dplyr)
 ```
 
 # read data
@@ -205,3 +206,62 @@ binary_result_table <- kable(
 
 binary_result_table
 ```
+
+
+# consider without edu no's
+
+```{r}
+# filter to contain only binary attributes
+binary_df <- orig_list |> 
+  select(plan_id, edu_section_binary, edu_staff_binary, edu_funding_binary, edu_outcome_binary, edu_indicator_binary, obs_id) |> 
+  distinct(plan_id, edu_section_binary, .keep_all = TRUE) |> 
+  drop_na() |> # remove rows with NA because this indicates there is no education section to begin with
+  select(-plan_id)
+binary_df
+```
+
+```{r}
+
+staff_yes2 <- binary_df |>
+  summarize(count = sum(edu_staff_binary == 1)) |> 
+  pull(count)
+  
+funding_yes2 <- binary_df |> 
+  summarize(count = sum(edu_funding_binary == 1)) |> 
+  pull(count)
+
+outcome_yes2 <- binary_df |> 
+  summarize(count = sum(edu_outcome_binary == 1)) |> 
+  pull(count)
+
+indicator_yes2 <- binary_df |> 
+  summarize(count = sum(edu_indicator_binary == 1)) |> 
+  pull(count)
+
+staff_no2 <- binary_df |> 
+  summarize(count = sum(edu_staff_binary == 0)) |> 
+  pull(count)
+
+funding_no2 <- binary_df |> 
+  summarize(count = sum(edu_funding_binary == 0)) |> 
+  pull(count)
+
+outcome_no2 <- binary_df |> 
+  summarize(count = sum(edu_outcome_binary == 0)) |> 
+  pull(count)
+
+indicator_no2 <- binary_df |> 
+  summarize(count = sum(edu_indicator_binary == 0)) |> 
+  pull(count)
+
+objective <- c("Staff", "Funding", "Outcome", "Indicator")
+n_yes2_total <- c(staff_yes2, funding_yes2, outcome_yes2, indicator_yes2)
+n_no2_total <- c(staff_no2, funding_no2, outcome_no2, indicator_no2)
+n_total2 <- c(n_yes2_total + n_no2_total)
+percentages2 <- round(c((n_yes2_total/n_total2)*100), 1)
+result2_df <- data.frame(objective = objective, yes = n_yes2_total, no = n_no2_total, total = n_total2, percent = percentages2)
+result2_df
+```
+
+
+

@@ -1,0 +1,40 @@
+---
+title: "EDU what strategies"
+author: "Alexa Gray"
+date: "2025-01-21"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+# load data
+```{r}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+```
+
+```{r}
+edu_what <- orig_list |> 
+  distinct(obs_id, plan_id, edu_what) |> 
+  group_by(edu_what) |> 
+  mutate(edu_what = case_when(edu_what == "Volunteer training/steward program" ~ "Volunteer, intern, and steward training programs", TRUE ~ edu_what)) |> 
+  mutate(edu_what = case_when(edu_what == "Media marketing and science communications for the general publics for the general public" ~ "Media marketing and science communications for the general public", TRUE ~ edu_what)) |> 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) |> 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+                percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) |> 
+  rename(strategy_type = edu_what)
+
+edu_what
+
+```
+```{r}
+
+edu_what_table = edu_what |> 
+  select(strategy_type, n_plans, percent_of_plans)
+kable(edu_what_table)
+```
+
