@@ -17,7 +17,7 @@ library(dplyr)
 # read data
 
 ```{r read data}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
 ```
 
 # tidying
@@ -261,6 +261,19 @@ n_total2 <- c(n_yes2_total + n_no2_total)
 percentages2 <- round(c((n_yes2_total/n_total2)*100), 1)
 result2_df <- data.frame(objective = objective, yes = n_yes2_total, no = n_no2_total, total = n_total2, percent = percentages2)
 result2_df
+
+
+
+binary_result2_table <- kable(
+  result2_df,
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"),
+  format = "html",  # HTML format required for saving as an image
+  caption = "Binary Results Summary Of Plans With an EDU Section"
+) %>%
+  kable_styling()  
+  # save_kable(file = "binary_result_table2.png")
+
+binary_result2_table
 ```
 
 

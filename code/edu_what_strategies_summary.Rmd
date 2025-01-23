@@ -7,8 +7,9 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(knitr)
 library(tidyverse)
+library(kableExtra)
 ```
 
 # load data
@@ -25,16 +26,23 @@ edu_what <- orig_list |>
   summarize(n_strategies = length(unique(obs_id)),
             n_plans = length(unique(plan_id))) |> 
   mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
-                percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) |> 
+                percent_of_plans = (n_plans/length(unique(orig_list$plan_id))*100)) |> 
   rename(strategy_type = edu_what)
 
 edu_what
-
 ```
 ```{r}
 
 edu_what_table = edu_what |> 
   select(strategy_type, n_plans, percent_of_plans)
-kable(edu_what_table)
+kable(edu_what_table, col.names = c("Category", "Number of Plans", "Percentage of Plans"), digits = 1) 
+```
+
+```{r}
+# total number of plans:
+
+orig_list |> 
+  distinct(plan_id, name) |> 
+  count()
 ```
 
