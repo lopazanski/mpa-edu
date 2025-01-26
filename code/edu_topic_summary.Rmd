@@ -1,0 +1,38 @@
+---
+title: "EDU topic summary"
+author: "Alexa Gray"
+date: "2025-01-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+```
+
+# goal:  
+
+```{r}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+```
+
+```{r}
+edu_topic_summary = orig_list |> 
+  distinct(plan_id, obs_id, edu_topic) |> 
+  group_by(edu_topic) |> 
+  summarize(n_plans = length(unique(plan_id)), n_strategies = length(unique(obs_id))) |> 
+  mutate(`percent plans` = (n_plans/length(unique(orig_list$plan_id)))*100) |> 
+  mutate(`percent strategies` = (n_strategies/length(unique(orig_list$obs_id)))*100)
+  # pivot_wider(names_from = edu_topic, values_from = name) 
+```
+
+```{r}
+edu_topic_table = kable(edu_topic_summary, col.names = c("EDU topic", "Number of Plans", "Number of Strategies", "Percent of Plans", "Percent of Strategies"), digits = 1) 
+
+edu_topic_table |> 
+  kable_styling() |> 
+  save_kable("EDU_topic_summary.png")
+  
+```
+

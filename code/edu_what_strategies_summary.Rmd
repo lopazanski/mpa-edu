@@ -35,7 +35,9 @@ edu_what
 
 edu_what_table = edu_what |> 
   select(strategy_type, n_plans, percent_of_plans)
-kable(edu_what_table, col.names = c("Category", "Number of Plans", "Percentage of Plans"), digits = 1) 
+kable(edu_what_table, col.names = c("Category", "Number of Plans", "Percentage of Plans"), digits = 1) |> 
+  kable_styling() |> 
+ # save_kable("edu_what_table.png")
 ```
 
 ```{r}
