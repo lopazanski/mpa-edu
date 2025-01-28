@@ -2,7 +2,7 @@
 title: "target audience"
 author: "Alexa Gray"
 date: "2025-01-28"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -39,6 +39,6 @@ target_summary <- kable(target,
       digits = 2) 
 target_summary |> 
   kable_styling()
-save_kable(target_summary, file = "target_audience_summary.png")
+
            
 ```
