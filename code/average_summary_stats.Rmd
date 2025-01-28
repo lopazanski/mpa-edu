@@ -1,0 +1,51 @@
+---
+title: "EDU strategy summary"
+author: "Alexa Gray"
+date: "2025-01-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(knitr)
+library(gt)
+```
+
+```{r}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+```
+
+```{r}
+# average number of strategies per plan including plans that don't have an edu section
+avg_edu_strategy_all <- orig_list |> 
+  group_by(plan_id) |> 
+  summarize(
+    sum_edu_strategy = sum(!is.na(edu_strategy))  # Count non-NA values, treating NA as 0
+  ) |> 
+  mutate(mean_edu_strategy = round(mean(sum_edu_strategy, na.rm = TRUE), 2))  # Calculate the mean
+
+print(test)
+max(avg_edu_strategy_all$sum_edu_strategy)
+min(avg_edu_strategy_all$sum_edu_strategy)
+```
+
+```{r}
+# na's dropped
+
+avg_plans_with_eduplan <- orig_list |> 
+  # Remove rows where edu_strategy is NA
+  filter(!is.na(edu_strategy)) |> 
+  # Group by plan_id
+  group_by(plan_id) |> 
+  # Count distinct edu_strategy entries per plan_id
+  summarize(sum = n_distinct(edu_strategy, na.rm = TRUE)) |> 
+  # Calculate the mean of these sums
+  summarize(mean_edu_strategy = mean(sum, na.rm = TRUE))
+
+print(avg_plans_with_eduplan)
+range(avg_plans_with_eduplan$sum)
+
+```
+

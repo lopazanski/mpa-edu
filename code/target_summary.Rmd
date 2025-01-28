@@ -1,0 +1,44 @@
+---
+title: "target audience"
+author: "Alexa Gray"
+date: "2025-01-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+```
+
+```{r}
+ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+target <- orig_list %>% 
+  distinct(obs_id, plan_id, edu_target_audience) %>% 
+  separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
+  mutate(across(everything(), str_trim)) %>% 
+  pivot_longer(part_1:part_8, values_to = "edu_target_audience", names_to = NULL, values_drop_na = T) %>% 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Government officials and community leaders and community leaders" ~ "Government officials and community leaders", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Native and Native and Indigenous communities" ~ "Native and Indigenous communities", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Local residents" ~ "Local user groups", TRUE ~ edu_target_audience)) |> 
+  group_by(edu_target_audience) %>% 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) %>% 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
+ 
+```
+
+```{r}
+# create table
+target_summary <- kable(target,
+      col.names = c("Target Audience", "Number of Strategies", "Number of Plans", "Percent of Strategies", "Percent of Plans"), 
+      format = "html", 
+      caption = "Summary Statistics for Target Audience",
+      digits = 2) 
+target_summary |> 
+  kable_styling()
+save_kable(target_summary, file = "target_audience_summary.png")
+           
+```
