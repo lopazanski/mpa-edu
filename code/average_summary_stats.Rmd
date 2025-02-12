@@ -26,9 +26,21 @@ avg_edu_strategy_all <- orig_list |>
   ) |> 
   mutate(mean_edu_strategy = round(mean(sum_edu_strategy, na.rm = TRUE), 2))  # Calculate the mean
 
-print(test)
+# how many plans communicate the greatest number of strategies
+num_max <- avg_edu_strategy_all |> 
+  filter(sum_edu_strategy == max(sum_edu_strategy)) |> 
+           nrow()
+
+# how many plans communicate the minimum number of strategies
+num_min <- avg_edu_strategy_all |> 
+  filter(sum_edu_strategy == min(sum_edu_strategy)) |> 
+  nrow()
+
+# results
 max(avg_edu_strategy_all$sum_edu_strategy)
 min(avg_edu_strategy_all$sum_edu_strategy)
+num_max
+num_min
 ```
 
 ```{r}

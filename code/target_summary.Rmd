@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(kableExtra)
 library(knitr)
+library(webshot2)
 ```
 
 ```{r}
@@ -38,7 +39,7 @@ target_summary <- kable(target,
       caption = "Summary Statistics for Target Audience",
       digits = 2) 
 target_summary |> 
-  kable_styling()
+  kable_styling(latex_options = "striped") |> 
+  save_kable(file = "target_audience.png", zoom = 2)
 
-           
 ```

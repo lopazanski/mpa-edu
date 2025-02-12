@@ -259,19 +259,20 @@ n_yes2_total <- c(staff_yes2, funding_yes2, outcome_yes2, indicator_yes2)
 n_no2_total <- c(staff_no2, funding_no2, outcome_no2, indicator_no2)
 n_total2 <- c(n_yes2_total + n_no2_total)
 percentages2 <- round(c((n_yes2_total/n_total2)*100), 1)
-result2_df <- data.frame(objective = objective, yes = n_yes2_total, no = n_no2_total, total = n_total2, percent = percentages2)
+percent_no2 <- round(c(100 - percentages2), 1)
+result2_df <- data.frame(objective = objective, yes = n_yes2_total, no = n_no2_total, total = n_total2, percent = percentages2, percent_no = percent_no2)
 result2_df
 
 
 
 binary_result2_table <- kable(
   result2_df,
-  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"),
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes", "Percentage No"),
   format = "html",  # HTML format required for saving as an image
   caption = "Binary Results Summary Of Plans With an EDU Section"
 ) %>%
-  kable_styling()  
-  # save_kable(file = "binary_result_table2.png")
+  kable_styling()  |> 
+  save_kable(file = "binary_result_table2.png")
 
 binary_result2_table
 ```

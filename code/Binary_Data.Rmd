@@ -225,19 +225,20 @@ n_yes_total <- c(staff_yes, funding_yes, outcome_yes, indicator_yes)
 n_no <- c(staff_no, funding_no, outcome_no, indicator_no)
 n_total <- c(n_yes_total + n_no)
 percentages <- round(c((n_yes_total/n_total)*100), 1)
-result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
+percentage_no <- round(c(100 - percentages), 1)
+result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages, percent_no = percentage_no)
 
 #binary_result_table <- kable(result_df, colnames = c("Objective", "Yes", "No", "Total", "Percentage Yes")) 
 binary_result_table <- kable(
   result_df,
-  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"),
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes", "Percentage No"),
   format = "html",  # HTML format required for saving as an image
   caption = "Binary Results Summary"
 ) %>%
   kable_styling()
 
 # Save the table as a PNG image
-# save_kable(binary_result_table, "binary_result_table.png")
+save_kable(binary_result_table, "binary_result_table.png")
 # Load necessary libraries
 library(tidyverse)
 library(knitr)
