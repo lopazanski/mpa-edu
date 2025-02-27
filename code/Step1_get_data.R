@@ -9,7 +9,7 @@ library(janitor)
 library(googledrive)
 
 
-drive.dir <- "/Users/lopazanski/Library/CloudStorage/GoogleDrive-lopazanski@ucsb.edu/Shared drives/4-MPA Education/2-Data"
+# drive.dir <- "/Users/lopazanski/Library/CloudStorage/GoogleDrive-lopazanski@ucsb.edu/Shared drives/4-MPA Education/2-Data"
 
 
 # Read data from google --------------------------------------------------------
@@ -20,4 +20,4 @@ orig_list <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXx
   mutate(obs_id = rownames(.)) %>% 
   clean_names()
 
-saveRDS(orig_list, "data/raw-ish/education_export_4Dec2024.Rds")
+saveRDS(orig_list, "data/raw-ish/education_export_26Feb2025.Rds")
