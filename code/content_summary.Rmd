@@ -1,0 +1,37 @@
+---
+title: "edu content typer"
+author: "Alexa Gray"
+date: "2025-02-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(kableExtra)
+
+```
+
+```{r}
+library(readxl)
+mpa_data <- read_excel("01-mpa-management-plan_Education.xlsx")
+```
+```{r}
+content <- mpa_data |> 
+  distinct(`Plan ID`, edu_content_type) |> 
+  group_by(edu_content_type) |> 
+  summarize(n = length(`Plan ID`)) |> 
+  mutate(percent = 100*(n/length(unique(mpa_data$`Plan ID`)))) 
+
+content_summary <- kable(content,
+                         col.names = c("Content Type", "Number of Plans", "Percent of Plans"),
+                         format = "html",
+                         caption = "Summary Statistics for Content Type",
+                         digits = 1)
+content_summary |> 
+  kable_styling(latex_options = "striped") |> 
+ save_kable(file = "content_summary.png", zoom = 2)
+
+```
+

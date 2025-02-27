@@ -1,0 +1,64 @@
+---
+title: "target audience"
+author: "Alexa Gray"
+date: "2025-01-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+library(webshot2)
+library(readxl)
+```
+
+```{r}
+ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+target <- orig_list %>% 
+  distinct(obs_id, plan_id, edu_target_audience) %>% 
+  separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
+  mutate(across(everything(), str_trim)) %>% 
+  pivot_longer(part_1:part_8, values_to = "edu_target_audience", names_to = NULL, values_drop_na = T) %>% 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Government officials and community leaders and community leaders" ~ "Government officials and community leaders", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Native and Native and Indigenous communities" ~ "Native and Indigenous communities", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = case_when(edu_target_audience == "Local residents" ~ "Local user groups", TRUE ~ edu_target_audience)) |> 
+  mutate(edu_target_audience = recode(edu_target_audience, 
+                                      "Visitors" = "General public",
+                                      "Local user groups" = "General public")) |> 
+  mutate(edu_target_audience = recode(edu_target_audience,
+                                      "Collaborative organizations" = "Collaborative partners",
+                                      "Government officials and community leaders" = "Collaborative partners",
+                                      "Community leaders" = "Collaborative partners",
+                                      "Media journalists" = "Collaborative partners",
+                                      "Researchers" = "Collaborative partners")) |>  
+  mutate(edu_target_audience = recode(edu_target_audience,
+                                      "Fishers" = "Local user groups",
+                                      "Local tourism operators" = "Local user groups" ,
+                                      "Native and Indigenous communities" = "Local user groups",
+                                      "Developers" = "Local user groups",
+                                      "Local extractive industry" = "Local user groups")) |> 
+  mutate(edu_target_audience = recode(edu_target_audience,
+                                      "Park administration" = "Park staff and volunteers",
+                                      "Volunteers" = "Park staff and volunteers")) |> 
+  group_by(edu_target_audience) %>% 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) %>% 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
+ 
+```
+
+```{r}
+# create table
+target_summary <- kable(target,
+      col.names = c("Target Audience", "Number of Strategies", "Number of Plans", "Percent of Strategies", "Percent of Plans"), 
+      format = "html", 
+      caption = "Summary Statistics for Target Audience",
+      digits = 1) 
+target_summary |> 
+  kable_styling(latex_options = "striped") |> 
+ save_kable(file = "target_audience.png", zoom = 2)
+
+```

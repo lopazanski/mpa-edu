@@ -1,0 +1,281 @@
+---
+title: "binary data summary table"
+author: "Alexa Gray"
+date: "2025-01-21"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(kableExtra)
+library(tidyverse)
+library(knitr)
+library(dplyr)
+```
+
+# read data
+
+```{r read data}
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+```
+
+# tidying
+
+## edu_section
+does the plan have an education section or not? 
+```{r EDU SECT}
+edu_sect <- orig_list |> 
+  distinct(plan_id, name, edu_section_binary) 
+  
+edu_sect_wide <- pivot_wider(edu_sect, names_from = edu_section_binary,
+              names_prefix = "value",
+              values_from = name)
+
+edu_sect_summary <- edu_sect |> 
+  group_by(edu_section_binary) |> 
+  mutate(edu_section_binary = factor(edu_section_binary, levels = c("1", "0"))) |> # factor and set levels order
+  count()
+
+edu_sect_yes <- edu_sect |> 
+  filter(edu_section_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+edu_sect_no <- edu_sect |> 
+  filter(edu_section_binary == 0) |> 
+  count() |> 
+  pull(n)
+```
+
+## edu staff
+does the plan have staff or not? 
+
+```{r STAFF}
+staff_binary <- orig_list |> 
+  distinct( plan_id, name, edu_staff_binary) |> 
+  mutate(edu_staff_binary = replace_na(edu_staff_binary, 0))
+
+staff_binary_wider <- 
+  pivot_wider(data = staff_binary,
+              names_from = edu_staff_binary,
+              values_from = edu_staff_binary,
+              names_prefix = "value") |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1), 
+               values_to = "edu_staff_binary", 
+               names_to = NULL, 
+               values_drop_na = TRUE)
+staff_binary_summary <- staff_binary_wider |> 
+  group_by(edu_staff_binary) |> 
+  mutate(edu_staff_binary = factor(edu_staff_binary, levels = c("1", "0"))) |> 
+  count()
+
+staff_yes <- staff_binary_wider |> 
+  filter(edu_staff_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+staff_no <- staff_binary_wider |> 
+  filter(edu_staff_binary == 0) |> 
+  count() |> 
+  pull(n)
+```
+
+## edu funding
+does the plan have funding or not? 
+
+```{r FUNDING}
+funding_binary <- orig_list |> 
+  distinct(plan_id, name, edu_funding_binary) |> 
+  mutate(edu_funding_binary = replace_na(edu_funding_binary, 0))
+
+funding_binary_wider <- funding_binary |> 
+  pivot_wider(
+    values_from = edu_funding_binary,
+    names_prefix = "value",
+    names_from = edu_funding_binary
+  ) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0))
+
+funding_binary_final <- funding_binary_wider |> 
+  pivot_longer(
+    cols = c(value0, value1),
+    values_to = "edu_funding_binary", 
+    names_to = NULL,
+    values_drop_na = TRUE
+  )
+  
+  
+funding_binary_summary <- funding_binary_final |> 
+  group_by(edu_funding_binary) |> 
+  count()
+
+funding_yes <- funding_binary_final |> 
+  filter(edu_funding_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+funding_no <- funding_binary_final |> 
+  filter(edu_funding_binary == 0) |> 
+  count() |> 
+  pull(n)
+```
+
+## edu outcome
+does the plan have a specified outcome or not?
+
+```{r OUTCOME}
+outcome_binary <- orig_list |> 
+  distinct(plan_id, name, edu_outcome_binary) |> 
+  mutate(edu_outcome_binary = replace_na(edu_outcome_binary, 0))
+
+outcome <- outcome_binary |> 
+  pivot_wider(values_from = edu_outcome_binary,
+              names_prefix = "value",
+              names_from = edu_outcome_binary) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1),
+               values_to = "edu_outcome_binary",
+               names_to = NULL, 
+               values_drop_na = TRUE)
+
+outcome_binary_summary <- outcome |> 
+  group_by(edu_outcome_binary) |> 
+  count()
+
+outcome_yes <- outcome |> 
+  filter(edu_outcome_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+outcome_no <- outcome |> 
+  filter(edu_outcome_binary == 0) |> 
+  count() |> 
+  pull(n)
+```
+
+## edu indicator
+Did the plan meet the desired outcome or not? 
+
+```{r}
+indicator_binary <- orig_list |> 
+  distinct(plan_id, name, edu_indicator_binary) |> 
+  mutate(edu_indicator_binary = replace_na(edu_indicator_binary, 0)) |> 
+  pivot_wider(values_from = edu_indicator_binary,
+              names_prefix = "value",
+              names_from = edu_indicator_binary) |> 
+  mutate(value0 = if_else(!is.na(value1) & !is.na(value0), NA, value0)) |> 
+  pivot_longer(cols = c(value0, value1),
+               names_to = NULL, 
+               values_to = "edu_indicator_binary",
+               values_drop_na = TRUE)
+  
+indicator_binary_summary <- indicator_binary |> 
+  group_by(edu_indicator_binary) |> 
+  count()
+
+indicator_yes <- indicator_binary |> 
+  filter(edu_indicator_binary == 1) |> 
+  count() |> 
+  pull(n)
+
+indicator_no <- indicator_binary |> 
+  filter(edu_indicator_binary == 0) |> 
+  count() |> 
+  pull(n)
+```
+
+# Create Table
+
+```{r SUMMARY}
+objective <- c("Staff", "Funding", "Outcome", "Indicator")
+n_yes_total <- c(staff_yes, funding_yes, outcome_yes, indicator_yes)
+n_no <- c(staff_no, funding_no, outcome_no, indicator_no)
+n_total <- c(n_yes_total + n_no)
+percentages <- round(c((n_yes_total/n_total)*100), 1)
+result_df <- data.frame(objective = objective, yes = n_yes_total, no = n_no, total = n_total, percent = percentages)
+
+binary_result_table <- kable(
+  result_df,
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes"),
+  format = "html",  # HTML format required for saving as an image
+  caption = "Binary Results Summary"
+) %>%
+  kable_styling()
+
+binary_result_table
+```
+
+
+# consider without edu no's
+
+```{r}
+# filter to contain only binary attributes
+binary_df <- orig_list |> 
+  select(plan_id, edu_section_binary, edu_staff_binary, edu_funding_binary, edu_outcome_binary, edu_indicator_binary, obs_id) |> 
+  distinct(plan_id, edu_section_binary, .keep_all = TRUE) |> 
+  drop_na() |> # remove rows with NA because this indicates there is no education section to begin with
+  select(-plan_id)
+binary_df
+```
+
+```{r}
+
+staff_yes2 <- binary_df |>
+  summarize(count = sum(edu_staff_binary == 1)) |> 
+  pull(count)
+  
+funding_yes2 <- binary_df |> 
+  summarize(count = sum(edu_funding_binary == 1)) |> 
+  pull(count)
+
+outcome_yes2 <- binary_df |> 
+  summarize(count = sum(edu_outcome_binary == 1)) |> 
+  pull(count)
+
+indicator_yes2 <- binary_df |> 
+  summarize(count = sum(edu_indicator_binary == 1)) |> 
+  pull(count)
+
+staff_no2 <- binary_df |> 
+  summarize(count = sum(edu_staff_binary == 0)) |> 
+  pull(count)
+
+funding_no2 <- binary_df |> 
+  summarize(count = sum(edu_funding_binary == 0)) |> 
+  pull(count)
+
+outcome_no2 <- binary_df |> 
+  summarize(count = sum(edu_outcome_binary == 0)) |> 
+  pull(count)
+
+indicator_no2 <- binary_df |> 
+  summarize(count = sum(edu_indicator_binary == 0)) |> 
+  pull(count)
+
+objective <- c("Staff", "Funding", "Outcome", "Indicator")
+n_yes2_total <- c(staff_yes2, funding_yes2, outcome_yes2, indicator_yes2)
+n_no2_total <- c(staff_no2, funding_no2, outcome_no2, indicator_no2)
+n_total2 <- c(n_yes2_total + n_no2_total)
+percentages2 <- round(c((n_yes2_total/n_total2)*100), 1)
+percent_no2 <- round(c(100 - percentages2), 1)
+result2_df <- data.frame(objective = objective, yes = n_yes2_total, no = n_no2_total, total = n_total2, percent = percentages2, percent_no = percent_no2)
+result2_df
+
+
+
+binary_result2_table <- kable(
+  result2_df,
+  col.names = c("Objective", "Yes", "No", "Total", "Percentage Yes", "Percentage No"),
+  format = "html",  # HTML format required for saving as an image
+  caption = "Binary Results Summary Of Plans With an EDU Section"
+) %>%
+  kable_styling()  |> 
+  save_kable(file = "binary_result_table2.png")
+
+binary_result2_table
+```
+
+
+
