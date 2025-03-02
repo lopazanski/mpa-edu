@@ -19,7 +19,7 @@ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
 
 ```{r}
 edu_what <- orig_list |> 
-  distinct(obs_id, plan_id, edu_what) |> 
+  distinct(obs_id, plan_id, edu_what)
   group_by(edu_what) |> 
   mutate(edu_what = case_when(edu_what == "Volunteer training/steward program" ~ "Volunteer, intern, and steward training programs", TRUE ~ edu_what)) |> 
   mutate(edu_what = case_when(edu_what == "Media marketing and science communications for the general publics for the general public" ~ "Media marketing and science communications for the general public", TRUE ~ edu_what)) |> 
@@ -31,6 +31,22 @@ edu_what <- orig_list |>
 
 edu_what
 ```
+```{r}
+# Create binary obs
+edu_what_binary <- orig_list |> 
+  filter(!is.na(edu_what)) |> 
+  distinct(plan_id, edu_what) |> 
+  mutate(edu_what = case_when(edu_what == "Volunteer training/steward program" ~ "Volunteer, intern, and steward training programs", TRUE ~ edu_what)) |> 
+  mutate(edu_what = case_when(edu_what == "Media marketing and science communications for the general publics for the general public" ~ "Media marketing and science communications for the general public", TRUE ~ edu_what)) |> 
+  group_by(plan_id, edu_what) |> 
+  summarize(binary = n()) |> 
+  pivot_wider(names_from = edu_what, values_from = binary, values_fill = 0) |> 
+  pivot_longer(cols = 2:9) |> 
+  mutate(value = if_else(value > 0, 1, 0))
+edu_what_binary
+  
+```
+
 ```{r}
 
 edu_what_table = edu_what |> 
