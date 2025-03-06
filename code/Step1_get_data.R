@@ -15,8 +15,8 @@ library(googledrive)
 # Read data from google --------------------------------------------------------
 
 orig_list <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXxRRws8KiTv0P5nsXWR-1Oz5JyLL1o/edit?gid=1188768943#gid=1188768943",
-                        sheet = "USE THIS plan-info", trim_ws = T, range = "A:Q",
-                        na = c("NA", "", "N/A"), col_types = "ncnccccccncncncnc") %>% 
+                        sheet = "USE THIS plan-info", trim_ws = T, range = "A:X",
+                        na = c("NA", "", "N/A"), col_types = "ncnccccccncncncncccccncc") %>% 
   mutate(obs_id = rownames(.)) %>% 
   clean_names()
 
