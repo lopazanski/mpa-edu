@@ -10,15 +10,16 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyverse)
 library(kableExtra)
-
+library(googlesheets4)
 ```
 
 ```{r}
 library(readxl)
-mpa_data <- read_excel("01-mpa-management-plan_Education.xlsx")
+mpa_data <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXxRRws8KiTv0P5nsXWR-1Oz5JyLL1o/edit?gid=1188768943#gid=1188768943")
 ```
 ```{r}
 content <- mpa_data |> 
+  filter(!is.na(`Plan ID`)) |> 
   distinct(`Plan ID`, edu_content_type) |> 
   group_by(edu_content_type) |> 
   summarize(n = length(`Plan ID`)) |> 
