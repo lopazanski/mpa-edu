@@ -34,13 +34,16 @@ edu_what_binary <- orig_list |>
 edu_what_binary
 ```
 ```{r}
-ggplot(edu_what_binary, aes(x = name, y = plan_id, fill = value)) +
+heatmap_draft <- ggplot(edu_what_binary, aes(x = name, y = plan_id, fill = value)) +
   geom_tile(color = "white") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 1)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 2)) +
+  scale_x_discrete(expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
-  ggh4x::facet_nested(region~., scales = "free", space = "free") 
+  ggh4x::facet_nested(region~., scales = "free", space = "free") +
+  labs(x = "social strategy", y = "Plan ID by Region") +
+  scale_fill_discrete(labels = c("0" = "no", "1" = "yes"))
 
 ## order strategies -> convert to factor
-
+ggsave("heatmap_draft.png", heatmap_draft)
 ```
 

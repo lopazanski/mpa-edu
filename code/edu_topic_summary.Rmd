@@ -9,6 +9,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
+library(kableExtra)
+library(forcats)
 ```
 
 # goal:  
@@ -20,6 +22,7 @@ orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
 ```{r}
 edu_topic_summary = orig_list |> 
   distinct(plan_id, obs_id, edu_topic) |> 
+  filter(!is.na(edu_topic)) |> 
   group_by(edu_topic) |> 
   summarize(n_plans = length(unique(plan_id)), n_strategies = length(unique(obs_id))) |> 
   mutate(`percent plans` = (n_plans/length(unique(orig_list$plan_id)))*100) |> 
@@ -34,5 +37,29 @@ edu_topic_table |>
   kable_styling() |> 
   save_kable("EDU_topic_summary.png")
   
+```
+
+```{r}
+library(gridExtra)
+topic_summary_test <- edu_topic_summary |> 
+  mutate(edu_topic = fct_reorder(edu_topic, `percent plans`, .desc = TRUE)) |> 
+  mutate(`percent strategies` = round(`percent strategies`, 1),
+         `percent plans` = round(`percent plans`, 1))
+
+
+topic_test <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent plans`)) +
+  geom_bar(stat = "identity", fill = "#299ec2", width = 0.5) +
+  labs(title = "Topic of Education as Percentage of Plans", x = "Education topic", y = "Percent") +
+  geom_text(aes(label = paste0(`percent plans`, "%")), vjust = 0.001) +
+  theme_minimal()
+
+topic_strategies <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent strategies`)) + 
+  geom_bar(stat = "identity", fill = "#71b3c7", width = 0.5) + 
+  labs(title = "Topic of Education as Percentage of Strategies", x = "Education topic", y = "Percent") + 
+  geom_text(aes(label = paste0(`percent strategies`, "%")), vjust = 0.001) +
+  theme_minimal()
+topic_figure <- grid.arrange(topic_test, topic_strategies, ncol = 2)
+ggsave("edu_topic_figure.png", topic_figure, width = 12, height = 6)
+
 ```
 

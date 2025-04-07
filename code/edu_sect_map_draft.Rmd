@@ -22,15 +22,15 @@ library(ggExtra)
 
 
 # Directories
-data.dir <- file.path("data", "processed")
+data.dir <- file.path("MPA EDU", "data", "processed")
 
 # Read Data -------------------------------------------------------------------
-area_sf <- readRDS(file.path(data.dir, "processed-area-geometry.Rds"))
-area    <- readRDS(file.path(data.dir, "processed-area-metadata.Rds")) %>% 
-  select(mpa_id, plan_id)
-review  <- readRDS(file.path(data.dir, "processed-doc-review.Rds")) # information plotted
+area_sf <- readRDS("~/MPA EDU/data/processed/processed-area-geometry.Rds")
+area    <- readRDS("~/MPA EDU/data/processed/processed-area-metadata.Rds") %>% 
+   select(mpa_id, plan_id)
+review  <- readRDS("~/MPA EDU/data/processed/processed-doc-review.Rds") # information plotted
 
-orig_list <- orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_6Mar2025.Rds") # my data
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_6Mar2025.Rds") # my data
 
 
 # Build Data -------------------------------------------------------------------
@@ -67,7 +67,9 @@ mpa_df <- mpa_centroids %>%
   left_join(., area, by = "mpa_id") %>%  # left join of value that will be plotted
   left_join(., edu_sect) %>%
   
-  left_join(., climate_mention, by = "plan_id") 
+  left_join(., climate_mention, by = "plan_id") %>%
+  filter(!is.na(plan_id)) |> 
+  filter(!is.na(edu_section_binary))
 
 
 
@@ -137,9 +139,6 @@ lon_labels <- c("180째W", "150째W","120째W","90째W","60째W","30째W", "0째", "30�
 # Get world basemap
 world_data <- map_data("world")
 
-# Replace NAs with "plan not located"
-mpa_df$climate_mention[is.na(mpa_df$climate_mention)] <- "Plan not located"
-
 # convert to factor
 mpa_df <- mpa_df %>% 
   mutate(edu_section_binary = factor(edu_section_binary
@@ -158,10 +157,10 @@ g1 <- ggplot() +
              aes(x = X, y = Y, col = edu_section_binary),
           alpha = 0.4, size = 2) + 
   # Colors with colorblind friendly red/blue
-  scale_color_manual(values = c("#D81B60", "#1E88E5", "#818589"),
-                     labels = c("Plan does not mention climate change", # legend labels
-                                "Plan mentions climate change",
-                                "No plan located")) +
+  scale_color_manual(values = c("#D81B60", "#14ace3"),
+                     labels = c("Plan does not have education section", # legend labels
+                                "Plan has education section"
+                                )) +
   # Set axes
   scale_x_continuous(limits = c(-185, 185), expand = c(0,0),
                      breaks = c(-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180),
@@ -172,7 +171,8 @@ g1 <- ggplot() +
   # Formatting
   labs(color = NULL,
        x = NULL,
-       y = NULL) +
+       y = NULL,
+       title = "MPA plans and education section") +
   theme_bw()+ 
   theme(legend.position = c(0.19, 0.09),
         legend.text=element_text(size = 7),
@@ -184,54 +184,54 @@ g1 <- ggplot() +
 g1
 
 # Build density plot for marginal plot
-g2 <- ggplot(mpa_df,  aes(y = Y, fill = climate_mention, 
-                          color = climate_mention)) +
-  geom_density(alpha=0.3) +
-  scale_fill_manual(values = c("#D81B60", "#1E88E5", "#818589")) +
-  scale_color_manual(values = c("#D81B60", "#1E88E5", "#818589")) +
-  
-  # Labels
-  labs(x=NULL,
-       y = NULL) +
-  # Limits
-  scale_y_continuous(limits = c(-89, 89), expand = c(0.01,0.01),
-                     breaks = c(-60, -30, 0, 30, 60))+
-  # Theme
-  theme_bw() +
-  theme(legend.position = "none",
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(), 
-        panel.border = element_blank(),
-        axis.line = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        plot.background = element_rect(fill = "white"))
-g2
-
-
-library(cowplot)
-plot_grid(g1, g2, ncol = 2, align = "h", rel_widths = c(0.9, 0.1))
-ggsave(file.path("figs", "Fig2_Map.png"),
-       width = 6.5, height = 3, dpi = 300)
-
-# grob1 <- ggplotGrob(g1)
-# grob2 <- ggplotGrob(g2)
-# grid::grid.newpage()
-# grid::grid.draw(cbind(grob1, grob2), widths = c(0.9, 0.1))
+# g2 <- ggplot(mpa_df,  aes(y = Y, fill = climate_mention, 
+#                           color = climate_mention)) +
+#   geom_density(alpha=0.3) +
+#   scale_fill_manual(values = c("#D81B60", "#1E88E5", "#818589")) +
+#   scale_color_discrete(values = c("#D81B60", "#1E88E5", "#818589")) +
+#   
+#   # Labels
+#   labs(x=NULL,
+#        y = NULL) +
+#   # Limits
+#   scale_y_continuous(limits = c(-89, 89), expand = c(0.01,0.01),
+#                      breaks = c(-60, -30, 0, 30, 60))+
+#   # Theme
+#   theme_bw() +
+#   theme(legend.position = "none",
+#         panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), 
+#         panel.border = element_blank(),
+#         axis.line = element_blank(),
+#         axis.text = element_blank(),
+#         axis.ticks = element_blank(),
+#         plot.background = element_rect(fill = "white"))
+# g2
 # 
 # 
-# grob2.widths <- grob2$widths[1:3]
-# grob2$widths[1:3] <- grob2.widths*0.1
+# library(cowplot)
+# plot_grid(g1, g2, ncol = 2, align = "h", rel_widths = c(0.9, 0.1))
+# ggsave(file.path("figs", "Fig2_Map.png"),
+#        width = 6.5, height = 3, dpi = 300)
 # 
-# g <- cbind(grob1, grob2, size = "first")
-# g$heights <- grid::unit.pmax(grob1$heights, grob2$heights)
-# 
-# 
-# gridExtra::grid.arrange(grob1, grob2, widths = c(0.9, 0.1))
-# 
-# grid::grid.newpage()
-# grid::grid.draw(g)
+# # grob1 <- ggplotGrob(g1)
+# # grob2 <- ggplotGrob(g2)
+# # grid::grid.newpage()
+# # grid::grid.draw(cbind(grob1, grob2), widths = c(0.9, 0.1))
+# # 
+# # 
+# # grob2.widths <- grob2$widths[1:3]
+# # grob2$widths[1:3] <- grob2.widths*0.1
+# # 
+# # g <- cbind(grob1, grob2, size = "first")
+# # g$heights <- grid::unit.pmax(grob1$heights, grob2$heights)
+# # 
+# # 
+# # gridExtra::grid.arrange(grob1, grob2, widths = c(0.9, 0.1))
+# # 
+# # grid::grid.newpage()
+# # grid::grid.draw(g)
 
 ```
 
