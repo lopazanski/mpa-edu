@@ -14,7 +14,8 @@ library(readxl)
 
 ```{r}
 # load data
-orig_list <- orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_6Mar2025.Rds")
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_6Mar2025.Rds")
+orig_list <- readRDS("data/raw-ish/education_export_6Mar2025.Rds")
 
 ```
 
@@ -33,6 +34,34 @@ edu_what_binary <- orig_list |>
   mutate(plan_id = as.factor(plan_id), value = as.factor(value))
 edu_what_binary
 ```
+
+```{r}
+column_order <- edu_what_binary %>% 
+  mutate(value = if_else(value == "0", 0, 1)) %>% 
+  group_by(name) %>% 
+  summarize(total = sum(value)) # use this to create a factor with levels for the columns
+# mutate(name = fct_reorder(......))
+
+row_order <- edu_what_binary %>% 
+  mutate(value = if_else(value == "0", 0, 1)) %>% 
+  group_by(plan_id, region) %>% 
+  summarize(total = sum(value))
+# mutate(plan_id = fct_reorder(......))
+
+edu_what_binary <- edu_what_binary %>% 
+  mutate(name = factor(name, levels = levels(column_order$name)))
+# same for the plan id column
+
+# Better colors, and make the x-axis label legible
+# Reorder the strategies (x-axis): use factor reorder by how prevalent the strategy is 
+# Instead of plan_id # on the y-axis, use the abbreviated name
+# > ?ggh4x::facet_nested - can check to see more arguments about where to put the labels for the different regions (e.g. top vs. right)
+# Consider reordering the plans within each region, so the ones that have the most strategies go towards the top
+
+```
+
+
+
 ```{r}
 heatmap_draft <- ggplot(edu_what_binary, aes(x = name, y = plan_id, fill = value)) +
   geom_tile(color = "white") +
