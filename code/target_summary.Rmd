@@ -46,7 +46,9 @@ target <- orig_list %>%
   summarize(n_strategies = length(unique(obs_id)),
             n_plans = length(unique(plan_id))) %>% 
   mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
-         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) 
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id))*100) |> 
+  mutate(edu_target_audience = fct_reorder(edu_target_audience, n_plans, .desc = TRUE)) |> 
+  mutate(percent_of_plans = round(percent_of_plans, 1))
  
 ```
 
@@ -62,3 +64,25 @@ target_summary |>
  save_kable(file = "target_audience.png", zoom = 2)
 
 ```
+
+```{r}
+# test = target |> 
+#   pivot_longer(cols = c("n_plans", "n_strategies"), values_to = "count") |> 
+#   mutate(edu_target_audience = fct_reorder(edu_target_audience, count, .desc = TRUE))
+
+test_plot = ggplot(data = target, aes(x = edu_target_audience, y = percent_of_plans)) +
+   geom_bar( stat = "identity", position = position_dodge(), fill = "#57ad5e") +
+   labs(
+        x =  "Target Audience",
+        y = "Percent of management plans",
+        fill = "type") +
+    theme_minimal() +
+  scale_color_manual(labels = "Percent of plans") +
+  theme(axis.text.x = element_text(angle = 45, size = 8, hjust = 1)) +
+   geom_text(aes(label = paste0(percent_of_plans, "%")), vjust = -1) +
+  scale_y_continuous(limits = c(0, 90))
+test_plot
+
+ggsave("edu_target_plot.png", test_plot)
+```
+

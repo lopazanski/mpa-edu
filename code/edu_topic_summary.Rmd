@@ -49,17 +49,18 @@ topic_summary_test <- edu_topic_summary |>
 
 topic_test <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent plans`)) +
   geom_bar(stat = "identity", fill = "#299ec2", width = 0.5) +
-  labs(title = "Topic of Education as Percentage of Plans", x = "Education topic", y = "Percent") +
-  geom_text(aes(label = paste0(`percent plans`, "%")), vjust = 0.001) +
-  theme_minimal()
-
-topic_strategies <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent strategies`)) + 
-  geom_bar(stat = "identity", fill = "#71b3c7", width = 0.5) + 
-  labs(title = "Topic of Education as Percentage of Strategies", x = "Education topic", y = "Percent") + 
-  geom_text(aes(label = paste0(`percent strategies`, "%")), vjust = 0.001) +
-  theme_minimal()
-topic_figure <- grid.arrange(topic_test, topic_strategies, ncol = 2)
-ggsave("edu_topic_figure.png", topic_figure, width = 12, height = 6)
+  labs(x = "Education topic", y = "Percent of plans") +
+  geom_text(aes(label = paste0(`percent plans`, "%")), vjust = -1) +
+  theme_minimal() +
+  scale_y_continuous(limits = c(0, 85))
+ggsave("edu_topic_figure.png", topic_test, width = 12, height = 6)
+# topic_strategies <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent strategies`)) + 
+#   geom_bar(stat = "identity", fill = "#71b3c7", width = 0.5) + 
+#   labs(title = "Topic of Education as Percentage of Strategies", x = "Education topic", y = "Percent") + 
+#   geom_text(aes(label = paste0(`percent strategies`, "%")), vjust = 0.001) +
+#   theme_minimal()
+# topic_figure <- grid.arrange(topic_test, topic_strategies, ncol = 2)
+# ggsave("edu_topic_figure.png", topic_figure, width = 12, height = 6)
 
 ```
 
