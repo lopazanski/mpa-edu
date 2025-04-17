@@ -10,12 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(tidyverse)
 library(readxl)
+library(cowplot)
+library(scales)
 ```
 
 ```{r}
 # load data
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_6Mar2025.Rds")
-orig_list <- readRDS("data/raw-ish/education_export_6Mar2025.Rds")
+orig_list <- readRDS("~/MPA EDU/data/processed/orig_list.Rds")
+orig_list <- readRDS("data/raw-ish/education_export_17Apr2025.Rds")
 
 ```
 
@@ -45,7 +47,7 @@ column_order <- edu_what_binary %>%
 row_order <- edu_what_binary %>% 
   mutate(value = if_else(value == "0", 0, 1)) %>% 
   group_by(plan_id, region) %>% 
-  summarize(total = sum(value)) %>%
+  summarize(total = sum(value), .groups = 'drop') %>% 
   mutate(plan_id = fct_reorder(plan_id, total))
 
 edu_what_binary <- edu_what_binary %>% 
@@ -64,20 +66,39 @@ edu_what_binary <- edu_what_binary %>%
 
 
 ```{r}
-heatmap_draft <- ggplot(edu_what_binary, aes(x = name, y = plan_id, fill = value)) +
-  geom_tile(color = "white") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 2),
-        aspect.ratio = 1) +
-  scale_x_discrete(expand = c(0, 0)) +
+
+
+heatmap_draft1 <- ggplot(edu_what_binary |> 
+                           filter(region %in% c("Pacific", "Indian" )),
+                         aes(x = name, y = plan_id, fill = value)) +
+  geom_tile(color = "white",  show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
+  scale_x_discrete(labels = label_wrap(width = 35), expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
   ggh4x::facet_nested(region~., scales = "free", space = "free") +
-  labs(x = "social strategy", y = "Plan ID by Region") +
+  labs(x = NULL, y = "Plan ID by Region") +
   scale_fill_manual(labels = c("0" = "no", "1" = "yes"),
                       values = c("0" = "#d3dce0",
                                  "1" = "#377899"))
-heatmap_draft
+
+heatmap_draft2 <- ggplot(edu_what_binary |> 
+                           filter(!(region %in% c("Pacific", "Indian" ))),
+                         aes(x = name, y = plan_id, fill = value)) +
+  geom_tile(color = "white") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
+  scale_x_discrete(labels = label_wrap(width = 35), expand = c(0, 0)) +
+ # facet_grid(~region, scales = "free")
+  ggh4x::facet_nested(region~., scales = "free", space = "free") +
+  labs(x = NULL, y = NULL) +
+  scale_fill_manual(labels = c("0" = "no", "1" = "yes"),
+                      values = c("0" = "#d3dce0",
+                                 "1" = "#377899"))
+
+heatmap_draft <- plot_grid(heatmap_draft1, heatmap_draft2)
+# heatmap_draft1
+# heatmap_draft2
 
 ## order strategies -> convert to factor
-#ggsave("heatmap_draft.png", heatmap_draft)
+ggsave("heatmap_draft.png", heatmap_draft, width = 10, height = 12, units = "in")
 ```
 
