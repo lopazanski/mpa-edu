@@ -102,3 +102,29 @@ heatmap_draft <- plot_grid(heatmap_draft1, heatmap_draft2)
 ggsave("heatmap_draft.png", heatmap_draft, width = 10, height = 12, units = "in")
 ```
 
+
+
+```{r}
+
+plan_names <- readRDS(file.path("data/processed/exported-plan-names.Rds"))
+
+
+names <- plan_names %>% 
+  select(plan_id, name_english) %>% 
+  mutate(name_abbrev = str_replace(name_english, "Marine Protected Area", "MPA")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine Reserve", "MR")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "National Park", "NP")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine Park", "MP")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Biosphere Reserve", "BR")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "National Marine Sanctuary", "NMS")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine National Monument", "MNM")) %>%  
+  mutate(name_abbrev = str_replace(name_abbrev, "Conservation Area", "CA")) %>%
+  mutate(name_abbrev = str_replace(name_abbrev, "Ecological Station", "ES")) %>%
+  mutate(name_abbrev = str_replace(name_abbrev, "National Wildlife Refuge", "NWR")) %>% 
+  mutate(name_abbrev = str_remove(name_abbrev, "Parks and ")) 
+
+
+
+
+```
+
