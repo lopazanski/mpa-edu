@@ -24,16 +24,17 @@ orig_list <- readRDS("data/raw-ish/education_export_17Apr2025.Rds")
 ```{r}
 # Create binary obs
 edu_what_binary <- orig_list |> 
+  left_join(names, by = "plan_id") |> 
   filter(!is.na(edu_what)) |> 
-  distinct(plan_id, edu_what, region) |> 
+  distinct(plan_id, name_abbrev, edu_what, region) |> 
   mutate(edu_what = case_when(edu_what == "Volunteer training/steward program" ~ "Volunteer, intern, and steward training programs", TRUE ~ edu_what)) |> 
   mutate(edu_what = case_when(edu_what == "Media marketing and science communications for the general publics for the general public" ~ "Media marketing and science communications for the general public", TRUE ~ edu_what)) |> 
-  group_by(plan_id, edu_what, region) |> 
+  group_by(plan_id, name_abbrev, edu_what, region) |> 
   summarize(binary = n()) |> 
   pivot_wider(names_from = edu_what, values_from = binary, values_fill = 0) |> 
-  pivot_longer(cols = 3:10) |> 
+  pivot_longer(cols = 4:11) |> 
   mutate(value = if_else(value > 0, 1, 0)) |> 
-  mutate(plan_id = as.factor(plan_id), value = as.factor(value))
+  mutate(name= as.factor(name), value = as.factor(value))
 edu_what_binary
 ```
 
@@ -46,13 +47,13 @@ column_order <- edu_what_binary %>%
 
 row_order <- edu_what_binary %>% 
   mutate(value = if_else(value == "0", 0, 1)) %>% 
-  group_by(plan_id, region) %>% 
+  group_by(name_abbrev) %>% 
   summarize(total = sum(value), .groups = 'drop') %>% 
-  mutate(plan_id = fct_reorder(plan_id, total))
+  mutate(name_abbrev = fct_reorder(name_abbrev, total))
 
 edu_what_binary <- edu_what_binary %>% 
   mutate(name = factor(name, levels = levels(column_order$name))) |> 
-  mutate(plan_id = factor(plan_id, levels = levels(row_order$plan_id)))
+  mutate(name_abbrev = factor(name_abbrev, levels = levels(row_order$name_abbrev)))
 # same for the plan id column
 
 # Better colors, and make the x-axis label legible
@@ -70,26 +71,26 @@ edu_what_binary <- edu_what_binary %>%
 
 heatmap_draft1 <- ggplot(edu_what_binary |> 
                            filter(region %in% c("Pacific", "Indian" )),
-                         aes(x = name, y = plan_id, fill = value)) +
+                         aes(x = name, y = name_abbrev, fill = value)) +
   geom_tile(color = "white",  show.legend = FALSE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
   scale_x_discrete(labels = label_wrap(width = 35), expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
   ggh4x::facet_nested(region~., scales = "free", space = "free") +
-  labs(x = NULL, y = "Plan ID by Region") +
+  labs(x = NULL, y = "Plan ID by Region", fill = NULL) +
   scale_fill_manual(labels = c("0" = "no", "1" = "yes"),
                       values = c("0" = "#d3dce0",
                                  "1" = "#377899"))
 
 heatmap_draft2 <- ggplot(edu_what_binary |> 
                            filter(!(region %in% c("Pacific", "Indian" ))),
-                         aes(x = name, y = plan_id, fill = value)) +
+                         aes(x = name, y = name_abbrev, fill = value)) +
   geom_tile(color = "white") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
   scale_x_discrete(labels = label_wrap(width = 35), expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
   ggh4x::facet_nested(region~., scales = "free", space = "free") +
-  labs(x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL, fill = NULL) +
   scale_fill_manual(labels = c("0" = "no", "1" = "yes"),
                       values = c("0" = "#d3dce0",
                                  "1" = "#377899"))
@@ -99,14 +100,14 @@ heatmap_draft <- plot_grid(heatmap_draft1, heatmap_draft2)
 # heatmap_draft2
 
 ## order strategies -> convert to factor
-ggsave("heatmap_draft.png", heatmap_draft, width = 10, height = 12, units = "in")
+ggsave("heatmap_draft.png", heatmap_draft, width = 13, height = 16, units = "in")
 ```
 
 
 
 ```{r}
 
-plan_names <- readRDS(file.path("data/processed/exported-plan-names.Rds"))
+plan_names <- readRDS(file.path("~/MPA EDU/data/processed/exported-plan-names.Rds"))
 
 
 names <- plan_names %>% 
