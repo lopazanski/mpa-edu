@@ -16,14 +16,15 @@ library(googlesheets4)
 ```{r}
 library(readxl)
 mpa_data <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXxRRws8KiTv0P5nsXWR-1Oz5JyLL1o/edit?gid=1188768943#gid=1188768943")
+mpa_data <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
 ```
 ```{r}
 content <- mpa_data |> 
-  filter(!is.na(`Plan ID`)) |> 
-  distinct(`Plan ID`, edu_content_type) |> 
+  filter(!is.na(plan_id)) |> 
+  distinct(plan_id, edu_content_type) |> 
   group_by(edu_content_type) |> 
-  summarize(n = length(`Plan ID`)) |> 
-  mutate(percent = 100*(n/length(unique(mpa_data$`Plan ID`)))) 
+  summarize(n = length(plan_id)) |> 
+  mutate(percent = 100*(n/length(unique(mpa_data$plan_id)))) 
 
 content_summary <- kable(content,
                          col.names = c("Content Type", "Number of Plans", "Percent of Plans"),

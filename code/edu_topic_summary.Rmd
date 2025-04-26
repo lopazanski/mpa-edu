@@ -16,7 +16,7 @@ library(forcats)
 # goal:  
 
 ```{r}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
 ```
 
 ```{r}
@@ -53,7 +53,7 @@ topic_test <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent plans`)
   geom_text(aes(label = paste0(`percent plans`, "%")), vjust = -1) +
   theme_minimal() +
   scale_y_continuous(limits = c(0, 85))
-ggsave("edu_topic_figure.png", topic_test, width = 12, height = 6)
+#ggsave("edu_topic_figure.png", topic_test, width = 12, height = 6)
 # topic_strategies <- ggplot(topic_summary_test, aes(x = edu_topic, y = `percent strategies`)) + 
 #   geom_bar(stat = "identity", fill = "#71b3c7", width = 0.5) + 
 #   labs(title = "Topic of Education as Percentage of Strategies", x = "Education topic", y = "Percent") + 

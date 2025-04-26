@@ -16,13 +16,14 @@ library(googledrive)
 
 orig_list <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXxRRws8KiTv0P5nsXWR-1Oz5JyLL1o/edit?gid=1188768943#gid=1188768943",
                         sheet = "USE THIS plan-info", trim_ws = T, range = "A:Y",
-                        na = c("NA", "", "N/A"), col_types = "ncnccccccncncncncncnccccc") %>% 
-  mutate(obs_id = rownames(.)) %>% 
+                        na = c("NA", "", "N/A"), col_types = "ncnccccccncncncncncnccccc") %>%
+  mutate(obs_id = rownames(.)) %>%
   clean_names()
 
-saveRDS(orig_list, "data/raw-ish/education_export_17Apr2025.Rds")
+saveRDS(orig_list, "data/raw-ish/education_export_24April2025.Rds")
 
 
 # save latest version 
 
 saveRDS(orig_list, "data/processed/orig_list.Rds")
+

@@ -17,7 +17,7 @@ library(dplyr)
 # read data
 
 ```{r read data}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
 ```
 
 # tidying
@@ -271,8 +271,8 @@ binary_result2_table <- kable(
   format = "html",  # HTML format required for saving as an image
   caption = "Binary Results Summary Of Plans With an EDU Section"
 ) %>%
-  kable_styling()  |> 
-  save_kable(file = "binary_result_table2.png")
+  kable_styling() # |> 
+  #save_kable(file = "binary_result_table2.png")
 
 binary_result2_table
 ```
