@@ -16,8 +16,25 @@ library(scales)
 
 ```{r}
 # load data
-orig_list <- readRDS("~/MPA EDU/data/processed/orig_list.Rds")
-orig_list <- readRDS("data/raw-ish/education_export_17Apr2025.Rds")
+orig_list <- readRDS("data/processed/orig_list.Rds")
+
+plan_names <- readRDS(file.path("data/processed/exported-plan-names.Rds"))
+
+
+names <- plan_names %>% 
+  select(plan_id, name_english) %>% 
+  mutate(name_abbrev = str_replace(name_english, "Marine Protected Area", "MPA")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine Reserve", "MR")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "National Park", "NP")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine Park", "MP")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Biosphere Reserve", "BR")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "National Marine Sanctuary", "NMS")) %>% 
+  mutate(name_abbrev = str_replace(name_abbrev, "Marine National Monument", "MNM")) %>%  
+  mutate(name_abbrev = str_replace(name_abbrev, "Conservation Area", "CA")) %>%
+  mutate(name_abbrev = str_replace(name_abbrev, "Ecological Station", "ES")) %>%
+  mutate(name_abbrev = str_replace(name_abbrev, "National Wildlife Refuge", "NWR")) %>% 
+  mutate(name_abbrev = str_remove(name_abbrev, "Parks and ")) 
+
 
 ```
 
@@ -62,6 +79,7 @@ row_order <- edu_what_binary %>%
 edu_what_binary <- edu_what_binary %>% 
   mutate(name = factor(name, levels = levels(column_order$name))) |> 
   mutate(name_abbrev = factor(name_abbrev, levels = levels(row_order$name_abbrev)))
+
 # same for the plan id column
 
 # Better colors, and make the x-axis label legible
@@ -77,8 +95,20 @@ edu_what_binary <- edu_what_binary %>%
 ```{r}
 
 edu_what_binary$value <- factor(edu_what_binary$value, levels = c("1", "0"))
+
+common_theme <- theme(
+  panel.grid = element_blank(),
+  panel.spacing = unit(0.15, "cm"),
+  strip.background = element_blank(),
+  strip.text.y.right = element_text(angle = -90, face = "bold"),
+  axis.text.x = element_text(angle = 40, hjust = 1, vjust = 1, size = 8),
+  axis.text.y = element_text(size = 9),
+  plot.margin = margin(2, 2, 2, 2)
+)
+
 heatmap_draft1 <- ggplot(edu_what_binary |> 
-                           filter(region %in% c("Pacific", "Indian" )),
+                           filter(region %in% c("Pacific", "Indian" )) %>% 
+                           mutate(region = factor(region, levels = c("Pacific","Indian"))),
                          aes(x = name, y = name_abbrev, fill = value)) +
   geom_tile(color = "white",  show.legend = FALSE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
@@ -86,52 +116,52 @@ heatmap_draft1 <- ggplot(edu_what_binary |>
   scale_x_discrete(labels = label_wrap(width = 30), expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
   ggh4x::facet_nested(region~., scales = "free", space = "free") +
-  labs(x = NULL, y = "MPA by Region", fill = NULL) +
+  labs(x = NULL, y = NULL, fill = NULL) +
   scale_fill_manual(labels = c("0" = "no", "1" = "yes"),
-                      values = c("0" = "#d3dce0",
-                                 "1" = "#377899"))
+                      values = c("0" = "#eef5f0",
+                                 "1" = "#4c9a5f")) +
+  common_theme + 
+  theme(legend.position = "none") 
 
 heatmap_draft2 <- ggplot(edu_what_binary |> 
                            filter(!(region %in% c("Pacific", "Indian" ))),
                          aes(x = name, y = name_abbrev, fill = value)) +
-  geom_tile(color = "white") +
+  geom_tile(color = "white", show.legend = FALSE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12)) +
   scale_x_discrete(labels = label_wrap(width = 30), expand = c(0, 0)) +
  # facet_grid(~region, scales = "free")
   ggh4x::facet_nested(region~., scales = "free", space = "free") +
   labs(x = NULL, y = NULL, fill = NULL) +
   scale_fill_manual(labels = c("1" = "yes", "0" = "no"),
-                      values = c("0" = "#d3dce0",
-                                 "1" = "#377899"))
+                      values = c("0" = "#eef5f0",
+                                 "1" = "#4c9a5f")) +
+  common_theme + 
+  theme(legend.position = "top",
+        legend.direction = "vertical",
+        legend.margin = margin(0, 5, 5, 5),
+        legend.key = element_rect(colour = "grey20"),
+        legend.box.margin = margin(5, 130, -5,-10),
+        plot.margin = margin(5, 2, 5, -2))
 
-heatmap_draft <- plot_grid(heatmap_draft1, heatmap_draft2)
-# heatmap_draft1
-# heatmap_draft2
+
+heatmap_draft <- heatmap_draft1 + heatmap_draft2 +
+  patchwork::plot_layout(widths = c(0.9, 1)) 
+
+heatmap_draft
+
+# heatmap_draft <- plot_grid(
+#   heatmap_draft1, NULL, heatmap_draft2,
+#   ncol = 3, align = "h",
+#   rel_widths = c(0.9, 0, 1),
+#   axis = "b")
 
 ## order strategies -> convert to factor
-ggsave("heatmap_draft.png", heatmap_draft, width = 17, height = 18, units = "in")
+ggsave(file.path('figs', "Fig3_heatmap.png"), heatmap_draft, width = 13, height = 12, units = "in")
 ```
 
 
 
 ```{r}
-
-plan_names <- readRDS(file.path("~/MPA EDU/data/processed/exported-plan-names.Rds"))
-
-
-names <- plan_names %>% 
-  select(plan_id, name_english) %>% 
-  mutate(name_abbrev = str_replace(name_english, "Marine Protected Area", "MPA")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "Marine Reserve", "MR")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "National Park", "NP")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "Marine Park", "MP")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "Biosphere Reserve", "BR")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "National Marine Sanctuary", "NMS")) %>% 
-  mutate(name_abbrev = str_replace(name_abbrev, "Marine National Monument", "MNM")) %>%  
-  mutate(name_abbrev = str_replace(name_abbrev, "Conservation Area", "CA")) %>%
-  mutate(name_abbrev = str_replace(name_abbrev, "Ecological Station", "ES")) %>%
-  mutate(name_abbrev = str_replace(name_abbrev, "National Wildlife Refuge", "NWR")) %>% 
-  mutate(name_abbrev = str_remove(name_abbrev, "Parks and ")) 
 
 
 
