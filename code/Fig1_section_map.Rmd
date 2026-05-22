@@ -30,7 +30,7 @@ area    <- readRDS(file.path(data.dir, "processed-area-metadata.Rds")) %>%
    select(mpa_id, plan_id)
 review  <- readRDS(file.path(data.dir, "processed-doc-review.Rds")) # information plotted
 
-orig_list <- readRDS(file.path("data", "raw-ish", "education_export_6Mar2025.Rds")) # my data
+orig_list <- readRDS("data/processed/orig_list.Rds")
 
 
 # Build Data -------------------------------------------------------------------
@@ -145,12 +145,12 @@ g1 <- ggplot() +
              color = "grey15", stroke = 0.25,
              alpha = 0.75, size = 2) +
   scale_fill_manual(
-    values = c("white", "#3b528b"),
+    values = c("white", "#4c9a5f"),
     labels = c("No education section", "Education section present"),
     guide = guide_legend(
       override.aes = list(shape = c(21, 24),
                           size = 2.8,
-                          color = "grey15",
+                  #       color = "grey15",
                           alpha = 1))) +
   scale_shape_manual(values = c(21, 24), guide = "none") +
   scale_x_continuous(

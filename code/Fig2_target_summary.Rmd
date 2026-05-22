@@ -85,7 +85,7 @@ target_summary <- kable(target_with_edu,
 #   mutate(edu_target_audience = fct_reorder(edu_target_audience, count, .desc = TRUE))
 
 target_plot = ggplot(data = target_with_edu, aes(x = edu_target_audience, y = percent_of_plans)) +
-   geom_bar( stat = "identity", position = position_dodge(), fill = "#57ad5e") +
+   geom_bar( stat = "identity", position = position_dodge(), fill = "#4c9a5f") +
    labs(
         x =  "Target audience",
         y = "Percent of management plans",
