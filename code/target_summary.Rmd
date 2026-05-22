@@ -15,11 +15,12 @@ library(readxl)
 ```
 
 ```{r}
- orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
+orig_list <- readRDS("data/processed/orig_list.Rds")
+
 target <- orig_list %>% 
-  distinct(obs_id, plan_id, edu_target_audience) %>% 
+  distinct(obs_id, plan_id, edu_section_binary, edu_target_audience) %>% 
   separate(edu_target_audience, into = paste0("part_", 1:8), sep = ";", fill = "right", extra = "merge") %>%
-  mutate(across(everything(), str_trim)) %>% 
+  mutate(across(where(is.character), str_trim)) %>% 
   pivot_longer(part_1:part_8, values_to = "edu_target_audience", names_to = NULL, values_drop_na = T) %>% 
   mutate(edu_target_audience = case_when(edu_target_audience == "Government officials and community leaders and community leaders" ~ "Government officials and community leaders", TRUE ~ edu_target_audience)) |> 
   mutate(edu_target_audience = case_when(edu_target_audience == "Native and Native and Indigenous communities" ~ "Native and Indigenous communities", TRUE ~ edu_target_audience)) |> 
@@ -41,7 +42,9 @@ target <- orig_list %>%
                                       "Local extractive industry" = "Local user groups")) |> 
   mutate(edu_target_audience = recode(edu_target_audience,
                                       "Park administration" = "Park staff and volunteers",
-                                      "Volunteers" = "Park staff and volunteers")) |> 
+                                      "Volunteers" = "Park staff and volunteers"))
+
+target_all <- target %>% 
   group_by(edu_target_audience) %>% 
   summarize(n_strategies = length(unique(obs_id)),
             n_plans = length(unique(plan_id))) %>% 
@@ -50,18 +53,29 @@ target <- orig_list %>%
   mutate(edu_target_audience = fct_reorder(edu_target_audience, n_plans, .desc = TRUE)) |> 
   mutate(percent_of_plans = round(percent_of_plans, 1))
  
+target_with_edu <- target %>% 
+  filter(edu_section_binary == 1) %>% 
+  group_by(edu_target_audience) %>% 
+  summarize(n_strategies = length(unique(obs_id)),
+            n_plans = length(unique(plan_id))) %>% 
+  mutate(percent_of_strategies = n_strategies/length(unique(orig_list$obs_id))*100,
+         percent_of_plans = n_plans/length(unique(orig_list$plan_id[orig_list$edu_section_binary == 1]))*100) |> 
+  mutate(edu_target_audience = fct_reorder(edu_target_audience, n_plans, .desc = TRUE)) |> 
+  mutate(percent_of_plans = round(percent_of_plans, 1))
+
 ```
 
 ```{r}
 # create table
-target_summary <- kable(target,
-      col.names = c("Target Audience", "Number of Strategies", "Number of Plans", "Percent of Strategies", "Percent of Plans"), 
-      format = "html", 
-      caption = "Summary Statistics for Target Audience",
-      digits = 1) 
-target_summary |> 
-  kable_styling(latex_options = "striped") |> 
- save_kable(file = "target_audience.png", zoom = 2)
+target_summary <- kable(target_with_edu,
+                        col.names = c("Target Audience", "Number of Strategies", "Number of Plans", "Percent of Strategies", "Percent of Plans"), 
+                        format = "html", 
+                        caption = "Summary Statistics for Target Audience",
+                        digits = 1) 
+
+# target_summary |> 
+#   kable_styling(latex_options = "striped") |> 
+#   save_kable(file = file.path("figs", "target_audience_table.png"), zoom = 2)
 
 ```
 
@@ -70,19 +84,20 @@ target_summary |>
 #   pivot_longer(cols = c("n_plans", "n_strategies"), values_to = "count") |> 
 #   mutate(edu_target_audience = fct_reorder(edu_target_audience, count, .desc = TRUE))
 
-test_plot = ggplot(data = target, aes(x = edu_target_audience, y = percent_of_plans)) +
+target_plot = ggplot(data = target_with_edu, aes(x = edu_target_audience, y = percent_of_plans)) +
    geom_bar( stat = "identity", position = position_dodge(), fill = "#57ad5e") +
    labs(
-        x =  "Target Audience",
+        x =  "Target audience",
         y = "Percent of management plans",
         fill = "type") +
     theme_minimal() +
   scale_color_manual(labels = "Percent of plans") +
   theme(axis.text.x = element_text(angle = 45, size = 8, hjust = 1)) +
    geom_text(aes(label = paste0(percent_of_plans, "%")), vjust = -1) +
-  scale_y_continuous(limits = c(0, 90))
-test_plot
+  scale_y_continuous(limits = c(0, 100))
+target_plot
 
-ggsave("edu_target_plot.png", test_plot)
+ggsave(file.path("figs", "Fig2_target_audience.png"), target_plot, width = 7, height = 5, units = c("in"))
+
 ```
 
