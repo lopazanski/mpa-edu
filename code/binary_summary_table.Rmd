@@ -17,7 +17,7 @@ library(dplyr)
 # read data
 
 ```{r read data}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
+orig_list <- readRDS("data/processed/orig_list.Rds")
 ```
 
 # tidying

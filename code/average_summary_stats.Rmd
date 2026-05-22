@@ -14,7 +14,7 @@ library(gt)
 ```
 
 ```{r}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_4Dec2024.Rds")
+orig_list <- readRDS("data/processed/orig_list.Rds")
 ```
 
 ```{r}

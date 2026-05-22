@@ -11,7 +11,7 @@ library(knitr)
 ```
 
 ```{r}
-orig_list <- readRDS("~/MPA EDU/data/raw-ish/education_export_21Oct2024.Rds")
+orig_list <- readRDS("data/processed/orig_list.Rds")
 ```
 
 # Education Section Binary

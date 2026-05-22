@@ -16,7 +16,7 @@ library(googlesheets4)
 ```{r}
 library(readxl)
 mpa_data <- read_sheet("https://docs.google.com/spreadsheets/d/1pA9tHg_jjx9XXXxRRws8KiTv0P5nsXWR-1Oz5JyLL1o/edit?gid=1188768943#gid=1188768943")
-mpa_data <- readRDS("~/MPA EDU/data/raw-ish/education_export_24April2025.Rds")
+mpa_data <-readRDS("data/processed/orig_list.Rds")
 ```
 ```{r}
 content <- mpa_data |> 
