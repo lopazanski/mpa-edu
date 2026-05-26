@@ -66,10 +66,7 @@ mpa_df <- mpa_centroids %>%
   cbind(mpa_pts) %>% 
   left_join(., area, by = "mpa_id") %>%  # left join of value that will be plotted
   left_join(., edu_sect) %>%
-  
-  left_join(., climate_mention, by = "plan_id") %>%
-  filter(!is.na(plan_id)) |> 
-  filter(!is.na(edu_section_binary))
+  left_join(., climate_mention, by = "plan_id") 
 
 
 
@@ -84,61 +81,16 @@ lon_labels <- c("180°W", "150°W","120°W","90°W","60°W","30°W", "0°", "30�
 world_data <- map_data("world")
 
 # convert to factor
-mpa_df <- mpa_df %>% 
-  mutate(edu_section_binary = factor(edu_section_binary
-                                     ))
-  # mutate(climate_mention = factor(climate_mention,
-  #                               levels = c("No", "Yes", "No plan located")))
+mpa_df_reviewed <- mpa_df %>% 
+  mutate(edu_section_binary = factor(edu_section_binary)) %>% 
+  filter(!is.na(plan_id)) |> 
+  filter(!is.na(edu_section_binary))
 
-# Build map 
-g1 <- ggplot() +
-  # Basemap with dark countries and white outlines
-  geom_polygon(data = world_data,
-               aes(x = long, y = lat, group = group),
-               fill = "grey85", color = "grey95", lwd = 0.1) +
-  # Points for each MPA
-  geom_point(data = mpa_df,
-             aes(x = X, y = Y, col = edu_section_binary),
-          alpha = 0.4, size = 2) + 
-  # Colors with colorblind friendly red/blue
-  scale_color_manual(values = c("purple", "#14ace3"),
-                     labels = c("Plan does not have education section", # legend labels
-                                "Plan has education section"
-                                )) +
-  # Set axes
-  scale_x_continuous(limits = c(-185, 185), expand = c(0,0),
-                     breaks = c(-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180),
-                     labels = lon_labels)+
-  scale_y_continuous(limits = c(-89, 89), expand = c(0,0),
-                     breaks = c(-60, -30, 0, 30, 60),
-                     labels = lat_labels) +
-  # Formatting
-  labs(color = NULL,
-       x = NULL,
-       y = NULL) +
-  theme_bw()+ 
-  theme(legend.position = c(0.19, 0.09),
-        legend.text=element_text(size = 7),
-        legend.key.size = unit(0.25, "cm"),
-        legend.margin = margin(-1,2,2,2),
-        legend.background = element_rect(fill = alpha("white",0.4),
-                                         color = "black")) 
-
-g1
-
-
-
-```
-
-
-
-
-```{r}
 g1 <- ggplot() +
   geom_polygon(data = world_data,
                aes(x = long, y = lat, group = group),
                fill = "grey90", color = "white", linewidth = 0.12) +
-  geom_point(data = mpa_df,
+  geom_point(data = mpa_df_reviewed,
              aes(x = X, y = Y,
                  fill = edu_section_binary,
                  shape = edu_section_binary),
@@ -146,7 +98,7 @@ g1 <- ggplot() +
              alpha = 0.75, size = 2) +
   scale_fill_manual(
     values = c("white", "#4c9a5f"),
-    labels = c("No education section", "Education section present"),
+    labels = c("No engagement section", "Engagement section present"),
     guide = guide_legend(
       override.aes = list(shape = c(21, 24),
                           size = 2.8,
@@ -187,5 +139,70 @@ g1
 
 ggsave(file.path("figs", "Fig1_map.png"), g1, width = 7, height = 4, units = c("in"))
 
+```
+
+```{r}
+
+g2 <- ggplot() +
+  geom_polygon(data = world_data,
+               aes(x = long, y = lat, group = group),
+               fill = "grey90", color = "white", linewidth = 0.12) +
+  geom_point(data = mpa_df,
+             aes(x = X, y = Y,
+                 fill = edu_section_binary,
+                 shape = edu_section_binary),
+             color = "grey15", stroke = 0.25,
+             alpha = 0.75, size = 2) +
+  scale_fill_manual(
+    values = c("0" = "white",
+               "1" = "#4c9a5f"),
+    na.value = "grey40",
+    breaks = c("0", "1", NA),
+    labels = c("No engagement section",
+               "Engagement section present",
+               "No plan located"),
+    guide = guide_legend(
+      override.aes = list(
+        shape = c(21, 24, 16),
+        fill = c("white", "#4c9a5f", "grey40"),
+        size = 2.8,
+        alpha = 1
+      ))) +
+  scale_shape_manual(values = c("0" = 21,"1" = 24),
+                     na.value = 16,
+                     guide = "none") +
+  scale_x_continuous(
+    limits = c(-185, 185), expand = c(0, 0),
+    breaks = c(-180, -120, -60, 0, 60, 120, 180),
+    labels = c("180°W", "120°W", "60°W",
+               "0°", "60°E", "120°E", "180°E")) +
+  scale_y_continuous(
+    limits = c(-89, 89), expand = c(0, 0),
+    breaks = c(-60, -30, 0, 30, 60),
+    labels = c("60°S", "30°S", "0°", "30°N", "60°N")) +
+  labs(x = NULL, y = NULL, fill = NULL) +
+  coord_quickmap() +
+  theme_minimal(base_size = 9) +
+  theme(
+    panel.grid.major = element_line(color = "grey88", linewidth = 0.2),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    axis.text = element_text(color = "grey30", size = 7),
+    axis.title = element_blank(),
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.key.height = unit(0.28, "cm"),
+    legend.key.width = unit(0.5, "cm"),
+    legend.spacing.x = unit(0.15, "cm"),
+    legend.margin = margin(0, 0, 0, 0),
+    legend.text = element_text(size = 7),
+    plot.margin = margin(2, 2, 2, 2))
+
+g2
+
+ggsave(file.path("figs", "SI_Fig1_map.png"), g2, width = 7, height = 4, units = c("in"))
 ```
 
