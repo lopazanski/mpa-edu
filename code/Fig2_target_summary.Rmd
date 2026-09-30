@@ -15,7 +15,7 @@ library(readxl)
 ```
 
 ```{r}
-orig_list <- readRDS("data/processed/orig_list.Rds")
+orig_list <- readRDS("~/MPA EDU/data/processed/orig_list.Rds")
 
 target <- orig_list %>% 
   distinct(obs_id, plan_id, edu_section_binary, edu_target_audience) %>% 
@@ -84,20 +84,26 @@ target_summary <- kable(target_with_edu,
 #   pivot_longer(cols = c("n_plans", "n_strategies"), values_to = "count") |> 
 #   mutate(edu_target_audience = fct_reorder(edu_target_audience, count, .desc = TRUE))
 
-target_plot = ggplot(data = target_with_edu, aes(x = edu_target_audience, y = percent_of_plans)) +
+target_plot = ggplot(data = target_with_edu, aes(x = percent_of_plans, y = edu_target_audience)) + 
    geom_bar( stat = "identity", position = position_dodge(), fill = "#4c9a5f") +
    labs(
-        x =  "Target audience",
-        y = "Percent of management plans",
+        x = "Percent of management plans",
+        y = NULL,
         fill = "type") +
     theme_minimal() +
-  scale_color_manual(labels = "Percent of plans") +
-  theme(axis.text.x = element_text(angle = 45, size = 8, hjust = 1)) +
-   geom_text(aes(label = paste0(percent_of_plans, "%")), vjust = -1) +
-  scale_y_continuous(limits = c(0, 100))
+  scale_color_manual(labels = "Percent of plans", aes(color = "grey30")) +
+  theme(axis.text.x = element_text(size = 8, hjust = 1), axis.text.y = element_text(size = 8, angle = 45)) +
+   geom_text(aes(label = paste0(percent_of_plans), hjust = -0.5), color = "grey30") +
+  scale_x_continuous(limits = c(0, 100)) + 
+  theme(panel.grid.major.y = element_blank())
 target_plot
 
-ggsave(file.path("figs", "Fig2_target_audience.png"), target_plot, width = 7, height = 5, units = c("in"))
+ggsave(file.path("..", "figs", "Fig2_target_audience.png"),target_plot,
+       width = 8,
+       height = 5,
+       units = "in"
+)
+#ggsave(file.path("figs", "Fig2_target_audience.png"), target_plot, width = 7, height = 5, units = c("in"))
 
 ```
 
