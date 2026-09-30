@@ -1,0 +1,70 @@
+---
+title: "Fig4_purpose"
+author: "Alexa Gray"
+date: "2026-09-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+library(webshot2)
+library(readxl)
+```
+
+```{r}
+orig_list <- readRDS("data/processed/orig_list.Rds") |> 
+  mutate(edu_topic = recode(edu_topic, "EE" = "Environmental education", 
+         "EE and compliance" = "Environmental education and compliance"))
+
+
+topic <- orig_list %>% 
+  distinct(plan_id, edu_section_binary, edu_topic) %>% 
+  filter(edu_section_binary == 1)
+
+topic2 <- topic %>% 
+  group_by(edu_topic) %>%
+  summarize(n_plans = length(unique(plan_id)),
+            pct_plans = round(n_plans/length(unique(orig_list$plan_id[orig_list$edu_section_binary == 1]))*100, 1)) %>% 
+  mutate(edu_topic = fct_reorder(edu_topic, n_plans, .desc = TRUE))
+  
+```
+
+```{r}
+purpose_plot <- ggplot(data = topic2, aes(x = pct_plans, y = edu_topic)) +
+  geom_bar(stat = "identity", position = position_dodge(), fill = "#4c9a5f") +
+  labs(
+    y =  NULL,
+    x = "Percent of management plans") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8, hjust = 1, color="grey30"),
+        axis.title.x = element_text(color = "grey30"),
+        panel.grid.major.y = element_blank()) +
+  geom_text(aes(label = paste0(pct_plans)), hjust = -0.5, color = "grey30") +
+  scale_x_continuous(limits = c(0, 100)) 
+
+purpose_plot
+
+```
+
+```{r}
+ggsave(file.path("figs", "Fig4_purpose.png"),purpose_plot,
+       width = 8,
+       height = 5,
+       units = "in"
+)
+```
+
+```{r}
+purpose_v2 <- purpose_plot + 
+  theme(panel.grid = element_blank())
+
+ggsave(file.path("figs", "Fig4_purpose_v2.png"),purpose_v2,
+       width = 8,
+       height = 5,
+       units = "in"
+)
+```
+
